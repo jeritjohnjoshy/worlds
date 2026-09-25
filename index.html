@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Jerit Joshy — computer science, AI, systems and research engineering." />
+<title>Jerit Joshy — Systems in Motion</title>
+<style>
+:root{--bg:#05060a;--fg:#f3f4f6;--muted:#9ca3af;--line:rgba(255,255,255,.11);--glass:rgba(8,10,16,.58);--accent:#7dd3fc;--accent2:#c084fc;--max:1180px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}#scene{position:fixed;inset:0;z-index:-2}#grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E")}
+nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:18px 5vw;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(5,6,10,.85),transparent)}.brand{font-weight:800;letter-spacing:-.04em}.brand span{color:var(--accent)}.navlinks{display:flex;gap:24px;color:#cbd5e1;font-size:.86rem}.navlinks a:hover{color:white}
+main{max-width:var(--max);margin:auto;padding:0 28px}.hero{min-height:100vh;display:grid;place-items:center;position:relative}.hero-inner{max-width:900px;padding-top:50px}.eyebrow{font:600 .78rem/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}.hero h1{font-size:clamp(4rem,11vw,9rem);line-height:.82;letter-spacing:-.085em;margin:0 0 28px;max-width:900px}.hero h1 em{font-style:normal;background:linear-gradient(100deg,#fff 10%,#7dd3fc 45%,#c084fc 90%);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{font-size:clamp(1.05rem,2vw,1.35rem);line-height:1.65;color:#c5cad4;max-width:680px}.cursor{display:inline-block;width:8px;height:1em;background:var(--accent);margin-left:5px;vertical-align:-.08em;animation:blink 1s infinite}@keyframes blink{50%{opacity:0}}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:34px}.btn{padding:12px 18px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.055);transition:.25s}.btn.primary{background:#f3f4f6;color:#05060a;border-color:#fff}.btn:hover{transform:translateY(-2px);border-color:rgba(125,211,252,.55)}
+section{padding:110px 0}.section-label{font:600 .72rem ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}.section-title{font-size:clamp(2.1rem,5vw,4.3rem);letter-spacing:-.06em;margin:0 0 45px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{grid-column:span 4;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(16px);border-radius:24px;padding:25px;min-height:210px;transition:transform .3s,border-color .3s,background .3s}.card:hover{transform:translateY(-7px) rotateX(1deg);border-color:rgba(125,211,252,.35);background:rgba(15,18,28,.72)}.card.wide{grid-column:span 8}.card h3{margin:0 0 10px;font-size:1.25rem}.card p{color:#aeb6c3;line-height:1.65;margin:0}.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.tag{font:500 .72rem ui-monospace,monospace;padding:6px 9px;border-radius:999px;border:1px solid var(--line);color:#cbd5e1}
+.timeline{position:relative;margin-top:10px}.timeline:before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:linear-gradient(var(--accent),transparent)}.step{position:relative;padding-left:38px;margin:0 0 36px}.dot{position:absolute;left:2px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}.step h3{margin:0 0 6px}.step p{margin:0;color:#aeb6c3;line-height:1.65}.year{font:600 .72rem ui-monospace,monospace;color:var(--accent);letter-spacing:.08em}
+.manifesto{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:70px 0}.manifesto blockquote{font-size:clamp(2rem,5vw,4.5rem);line-height:1.02;letter-spacing:-.065em;margin:0;max-width:1000px}.manifesto blockquote span{color:#7dd3fc}
+footer{padding:60px 0 80px;color:#8d96a5;font-size:.9rem;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media(max-width:800px){.navlinks{display:none}.card,.card.wide{grid-column:span 12}.hero h1{font-size:clamp(4rem,20vw,7rem)}main{padding:0 20px}}
+</style>
+</head>
+<body>
+<div id="scene"></div><div id="grain"></div>
+<nav><a class="brand" href="#top">J<span>J</span>.</a><div class="navlinks"><a href="#work">Work</a><a href="#stack">Stack</a><a href="#path">Path</a><a href="#contact">Contact</a></div></nav>
+<main id="top">
+<section class="hero"><div class="hero-inner"><div class="eyebrow">Computer Science × AI × Systems</div><h1>Build things<br><em>that think.</em></h1><p>I’m Jerit — a computer science engineer obsessed with the layer where algorithms become systems, systems become products, and products become new questions.<span class="cursor"></span></p><div class="cta"><a class="btn primary" href="#work">Explore the work ↓</a><a class="btn" href="https://github.com/" target="_blank" rel="noreferrer">GitHub ↗</a></div></div></section>
+<section id="work"><div class="section-label">Selected experiments</div><h2 class="section-title">From idea → architecture → reality.</h2><div class="grid">
+<article class="card wide"><h3>Multi-Agent Engineering System</h3><p>A software lifecycle where a CTO agent decomposes a goal into requirements, planning and worker tasks — with code-aware context, retrieval and containerized execution.</p><div class="tagrow"><span class="tag">LLMs</span><span class="tag">RAG</span><span class="tag">Docker</span><span class="tag">Kubernetes</span><span class="tag">Go</span><span class="tag">Postgres</span></div></article>
+<article class="card"><h3>Wall Painting Intelligence</h3><p>Role-based workflow for contractors and managers, image uploads, approval states and an ML service that evaluates paintable wall regions.</p><div class="tagrow"><span class="tag">Next.js</span><span class="tag">Firebase</span><span class="tag">ML API</span></div></article>
+<article class="card"><h3>Systems curiosity</h3><p>Browser internals, Rust, code graphs, VLSI and the hardware/software boundary — because useful abstractions are easier to understand when you can descend the stack.</p><div class="tagrow"><span class="tag">Rust</span><span class="tag">Architecture</span><span class="tag">Hardware</span></div></article>
+<article class="card"><h3>Research direction</h3><p>Long-term focus: research engineering in AI — turning papers, models and prototypes into robust systems rather than stopping at the demo.</p><div class="tagrow"><span class="tag">AI Research</span><span class="tag">Engineering</span></div></article>
+</div></section>
+<section id="stack"><div class="section-label">Current toolbox</div><h2 class="section-title">A stack that keeps getting deeper.</h2><div class="grid">
+<article class="card"><h3>Languages</h3><p>C++ · Python · Java · JavaScript · Rust · Go</p></article><article class="card"><h3>AI / ML</h3><p>Transformers · RAG · model APIs · ML fundamentals · experimentation</p></article><article class="card"><h3>Product systems</h3><p>React · Next.js · Django · FastAPI · Firebase · PostgreSQL</p></article><article class="card"><h3>Infrastructure</h3><p>Docker · Kubernetes · APIs · distributed workflows · cloud/security concepts</p></article><article class="card wide"><h3>How I learn</h3><p>First principles over memorized patterns. Build the mental model, derive the mechanism, implement it, break it, then rebuild it. The goal is not to know every library — it is to become dangerous at learning unfamiliar systems.</p></article>
+</div></section>
+<section id="path"><div class="section-label">Trajectory</div><h2 class="section-title">The long game.</h2><div class="timeline">
+<div class="step"><span class="dot"></span><div class="year">01 — FOUNDATION</div><h3>Computer Science</h3><p>Strengthen algorithms, data structures, mathematics, operating systems, networks, databases, compilers and computer architecture.</p></div>
+<div class="step"><span class="dot"></span><div class="year">02 — DEPTH</div><h3>Graduate-level systems thinking</h3><p>Use deeper study to connect theory with implementation — especially around AI, systems and the hardware/software interface.</p></div>
+<div class="step"><span class="dot"></span><div class="year">03 — RESEARCH ENGINEERING</div><h3>Bridge papers and production</h3><p>Build systems where research ideas survive contact with data, latency, infrastructure, evaluation and real users.</p></div>
+<div class="step"><span class="dot"></span><div class="year">04 — COMPOUNDING</div><h3>Make original things</h3><p>Projects, experiments, writing and open-source work become a public trail of increasingly ambitious technical questions.</p></div>
+</div></section>
+<div class="manifesto"><blockquote>Don’t optimize for looking like an engineer.<br><span>Become one by building.</span></blockquote></div>
+<section id="contact"><div class="section-label">Open loop</div><h2 class="section-title">Let’s build something worth explaining.</h2><div class="cta"><a class="btn primary" href="https://github.com/" target="_blank" rel="noreferrer">GitHub ↗</a><a class="btn" href="mailto:hello@example.com">Email ↗</a></div></section>
+<footer><span>© 2026 Jerit Joshy</span><span class="mono">curiosity.exe is always running</span></footer>
+</main>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.169.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.169.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x05060a,.035);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,1000);camera.position.set(0,1.2,18);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.querySelector('#scene').appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.enableZoom=false;controls.autoRotate=true;controls.autoRotateSpeed=.16;controls.maxPolarAngle=Math.PI*.62;controls.minPolarAngle=Math.PI*.38;
+const group=new THREE.Group();scene.add(group);
+const nodes=[];const geo=new THREE.IcosahedronGeometry(.055,1);const mat=new THREE.MeshBasicMaterial({color:0x9ee7ff});
+for(let i=0;i<150;i++){const p=new THREE.Vector3((Math.random()-.5)*15,(Math.random()-.5)*9,(Math.random()-.5)*13);const m=new THREE.Mesh(geo,mat.clone());m.position.copy(p);m.scale.setScalar(.5+Math.random()*2.2);group.add(m);nodes.push(p)}
+const positions=[];for(let i=0;i<nodes.length;i++){let best=[];for(let j=0;j<nodes.length;j++){if(i===j)continue;best.push([nodes[i].distanceTo(nodes[j]),j])}best.sort((a,b)=>a[0]-b[0]);for(let k=0;k<Math.min(2,best.length);k++){if(best[k][0]<2.2)positions.push(nodes[i].x,nodes[i].y,nodes[i].z,nodes[best[k][1]].x,nodes[best[k][1]].y,nodes[best[k][1]].z)}}
+const lineGeo=new THREE.BufferGeometry();lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));const lines=new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({color:0x4d7890,transparent:true,opacity:.22}));group.add(lines);
+const core=new THREE.Mesh(new THREE.IcosahedronGeometry(2.35,3),new THREE.MeshBasicMaterial({color:0x111827,wireframe:true,transparent:true,opacity:.23}));group.add(core);
+const glow=new THREE.Mesh(new THREE.SphereGeometry(1.7,32,32),new THREE.MeshBasicMaterial({color:0x17324a,transparent:true,opacity:.22}));group.add(glow);
+const mouse=new THREE.Vector2();addEventListener('pointermove',e=>{mouse.x=(e.clientX/innerWidth-.5);mouse.y=(e.clientY/innerHeight-.5)});
+function animate(){requestAnimationFrame(animate);group.rotation.y+=.0007;group.rotation.x+=.00015;core.rotation.x+=.002;core.rotation.y-=.0015;camera.position.x+=(mouse.x*1.5-camera.position.x)*.018;camera.position.y+=(-mouse.y*.8+1.2-camera.position.y)*.018;controls.update();renderer.render(scene,camera)}animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
