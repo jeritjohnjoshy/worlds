@@ -191,14 +191,14 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // Links provided by user
+        // Local image paths (ensure these files are in the same folder as index.html on GitHub)
         const photoUrls = [
-            "https://i.ibb.co/v6NPbw0B/PXL-20260730-193340084-RAW-01-COVER.jpg",
-            "https://i.ibb.co/cS9RhXr1/PXL-20260820-000818394-RAW-02-ORIGINAL.jpg",
-            "https://i.ibb.co/VpPdJX4p/PXL-20260909-230738630-RAW-02-ORIGINAL.jpg",
-            "https://i.ibb.co/0yDccHrq/PXL-20260910-041752707-RAW-01-COVER.jpg",
-            "https://i.ibb.co/bMzDbsj2/PXL-20260915-233244711-RAW-02-ORIGINAL.jpg",
-            "https://i.ibb.co/S49pbqRy/PXL-20260915-233853949-RAW-02-ORIGINAL.jpg"
+            "image1.jpg",
+            "image2.jpg",
+            "image3.jpg",
+            "image4.jpg",
+            "image5.jpg",
+            "image6.jpg"
         ];
         
         const totalPhotos = photoUrls.length;
@@ -263,32 +263,12 @@
             dirLight.shadow.camera.top = 30; dirLight.shadow.camera.bottom = -30;
             scene.add(dirLight);
 
-            // Pre-load textures using hidden HTML image elements to fix rendering issues
+            const textureLoader = new THREE.TextureLoader();
             photoUrls.forEach((url, i) => {
-                loadedTextures[i] = new THREE.Texture();
+                loadedTextures[i] = textureLoader.load(url, undefined, undefined, (err) => {
+                    console.error("Failed to load local image:", url, "Make sure the file exists in the correct folder!");
+                });
                 loadedTextures[i].colorSpace = THREE.SRGBColorSpace;
-
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                
-                img.onload = () => {
-                    loadedTextures[i].image = img;
-                    loadedTextures[i].needsUpdate = true;
-                };
-                
-                // Fallback to a proxy if the direct URL still throws a CORS error
-                img.onerror = () => {
-                    console.warn("Direct load failed, trying proxy for:", url);
-                    const proxyImg = new Image();
-                    proxyImg.crossOrigin = 'Anonymous';
-                    proxyImg.onload = () => {
-                        loadedTextures[i].image = proxyImg;
-                        loadedTextures[i].needsUpdate = true;
-                    };
-                    proxyImg.src = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-                };
-                
-                img.src = url;
             });
 
             createEnvironment();
