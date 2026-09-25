@@ -1,231 +1,716 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jerit Joshy — The Engineering World</title>
-<style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070d;color:#e8edf7;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
-canvas{display:block}
-#hud{position:fixed;inset:0;pointer-events:none}
-.panel{position:absolute;pointer-events:auto;background:rgba(8,12,22,.72);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(14px);box-shadow:0 20px 60px #0006;border-radius:16px}
-#intro{left:24px;top:24px;padding:18px 20px;max-width:420px}
-.kicker{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#7dd3fc}
-h1{font-size:30px;margin:5px 0 8px;line-height:1.05}
-p{margin:6px 0;color:#aeb8cb;font-size:13px;line-height:1.55}
-#help{right:24px;top:24px;padding:13px 16px;font-size:12px;color:#b9c5d8}
-#info{right:24px;bottom:24px;width:290px;padding:17px;display:none}
-#info h2{font-size:17px;margin:0 0 7px}
-.tag{display:inline-block;font-size:10px;padding:4px 7px;border-radius:99px;background:#172033;color:#93c5fd;margin:3px 3px 0 0}
-#status{left:24px;bottom:24px;padding:11px 14px;font-size:11px;color:#91a0b7}
-#cross{position:absolute;left:50%;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);opacity:.65}
-#cross:before,#cross:after{content:"";position:absolute;background:#dbeafe}
-#cross:before{width:12px;height:1px;top:6px}#cross:after{height:12px;width:1px;left:6px}
-#start{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at center,#10182a,#05070d 65%);z-index:5}
-#start .box{max-width:520px;text-align:center;padding:30px}
-#start h1{font-size:46px}
-button{border:0;border-radius:999px;padding:12px 22px;background:#e5f3ff;color:#07111f;font-weight:700;cursor:pointer;margin-top:14px}
-.small{font-size:11px;color:#7f8da3}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chisel Our Memories ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffe4e6; /* Soft pink background to prevent dark flashing */
+            font-family: 'Inter', sans-serif;
+            touch-action: none; /* Critical for custom mobile controls */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .romantic-font { font-family: 'Dancing Script', cursive; }
+
+        #webgl-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .interactive-ui { pointer-events: auto; }
+
+        /* Control Buttons */
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.05s, background 0.1s;
+        }
+        
+        .ctrl-btn:active {
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 8px; height: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        #crosshair.target-stone { background-color: #fbbf24; transform: translate(-50%, -50%) scale(1.5); }
+        #crosshair.target-photo { background-color: #ec4899; transform: translate(-50%, -50%) scale(1.5); }
+
+        /* Animations */
+        @keyframes pocketDrop {
+            0% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(0.1) translateY(200px); opacity: 0; }
+        }
+        .anim-pocket { animation: pocketDrop 0.6s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+    </style>
 </head>
 <body>
-<div id="start"><div class="box">
-<div class="kicker">JERIT JOSHY · ENGINEERING WORLD</div>
-<h1>Walk through the things I build.</h1>
-<p>A small explorable 3D world where projects become places: a multi-agent command center, a wall-intelligence scanner, a code graph, an AI research lab and a systems workshop.</p>
-<p class="small">Click Start, then click the world. WASD to walk · mouse to look · E to inspect · Shift to run.</p>
-<button id="startBtn">ENTER THE WORLD</button>
-</div></div>
 
-<div id="hud">
-  <div id="intro" class="panel">
-    <div class="kicker">THE ENGINEERING WORLD</div>
-    <h1>Ideas → Systems → Experiments</h1>
-    <p>Not a résumé. A place you can explore.</p>
-  </div>
-  <div id="help" class="panel">WASD move · Mouse look · Shift run · E inspect · Esc release mouse</div>
-  <div id="cross"></div>
-  <div id="status" class="panel">Ready · Find the glowing structures</div>
-  <div id="info" class="panel"><h2 id="infoTitle"></h2><p id="infoText"></p><div id="infoTags"></div></div>
-</div>
+    <div id="webgl-container"></div>
+    <div id="crosshair"></div>
 
-<script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+    <div id="ui-layer">
+        <!-- Top HUD -->
+        <div class="w-full p-4 md:p-6 flex justify-between items-start pt-10">
+            <!-- Compass -->
+            <div class="bg-white/10 backdrop-blur-md p-3 rounded-full border border-white/20 shadow-lg flex items-center justify-center relative w-16 h-16">
+                <div class="absolute text-[10px] text-white/50 top-1">N</div>
+                <div id="compass-arrow" class="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[20px] border-l-transparent border-r-transparent border-b-yellow-400 transition-transform duration-100 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" style="transform-origin: 50% 100%;"></div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10 text-xs md:text-sm text-gray-200 text-center pointer-events-none">
+                Swipe to look <br/> Find the stones!
+            </div>
+        </div>
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x05070d);
-scene.fog=new THREE.FogExp2(0x05070d,.012);
+        <!-- Middle UI: Collect Action -->
+        <div class="flex-grow flex items-center justify-center pointer-events-none">
+            <button id="btn-collect" class="hidden interactive-ui px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-full shadow-[0_10px_25px_rgba(236,72,153,0.5)] border-2 border-white/50 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                <span class="text-lg tracking-wide">Collect in Pocket</span>
+            </button>
+        </div>
 
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,1000);
-camera.position.set(0,2.0,28);
+        <!-- Bottom Controls & Inventory -->
+        <div class="w-full flex flex-col justify-end pb-6 px-4 gap-4">
+            
+            <!-- Controls Row -->
+            <div class="flex justify-between items-end w-full">
+                <!-- D-PAD -->
+                <div class="grid grid-cols-3 gap-2 w-40 md:w-48 interactive-ui">
+                    <div class="col-start-2">
+                        <button id="btn-fwd" class="ctrl-btn w-full aspect-square">↑</button>
+                    </div>
+                    <div class="col-start-1 row-start-2">
+                        <button id="btn-left" class="ctrl-btn w-full aspect-square">←</button>
+                    </div>
+                    <div class="col-start-2 row-start-2">
+                        <button id="btn-back" class="ctrl-btn w-full aspect-square">↓</button>
+                    </div>
+                    <div class="col-start-3 row-start-2">
+                        <button id="btn-right" class="ctrl-btn w-full aspect-square">→</button>
+                    </div>
+                </div>
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
+                <!-- CHISEL BUTTON -->
+                <div class="interactive-ui pb-2">
+                    <button id="btn-chisel" class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-300 to-gray-500 rounded-2xl shadow-[0_6px_0_#4b5563,0_15px_20px_rgba(0,0,0,0.5)] active:shadow-[0_0px_0_#4b5563,0_5px_10px_rgba(0,0,0,0.5)] active:translate-y-1.5 transition-all flex flex-col items-center justify-center border-2 border-white/20 opacity-50 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white mb-1 drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="m10 13-2 2"/>
+                            <path d="m14 17-1.5-1.5"/>
+                            <path d="m16 13-4 4"/>
+                        </svg>
+                        <span class="text-white font-black text-sm tracking-wider drop-shadow-md">CHISEL</span>
+                    </button>
+                </div>
+            </div>
 
-scene.add(new THREE.HemisphereLight(0x9ecbff,0x111522,1.4));
-const sun=new THREE.DirectionalLight(0xdbeafe,2.2);
-sun.position.set(12,22,8);sun.castShadow=true;scene.add(sun);
+            <!-- Pocket Inventory Bar -->
+            <div class="w-full max-w-md mx-auto bg-black/40 backdrop-blur-md rounded-2xl p-2 border border-white/10 flex items-center justify-between shadow-xl">
+                <div class="text-pink-400 font-bold px-2 text-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="score-text">0/6</span>
+                </div>
+                <div id="inventory-slots" class="flex gap-2">
+                    <!-- Thumbnail slots injected via JS -->
+                </div>
+            </div>
+        </div>
 
-const world=new THREE.Group();scene.add(world);
-const mats={
- floor:new THREE.MeshStandardMaterial({color:0x0a0f19,roughness:.92,metalness:.05}),
- dark:new THREE.MeshStandardMaterial({color:0x111827,roughness:.7,metalness:.15}),
- cyan:new THREE.MeshStandardMaterial({color:0x38bdf8,emissive:0x075985,emissiveIntensity:1.7,metalness:.35,roughness:.3}),
- violet:new THREE.MeshStandardMaterial({color:0x8b5cf6,emissive:0x4c1d95,emissiveIntensity:1.5,metalness:.3,roughness:.3}),
- green:new THREE.MeshStandardMaterial({color:0x34d399,emissive:0x064e3b,emissiveIntensity:1.4,metalness:.2,roughness:.35}),
- amber:new THREE.MeshStandardMaterial({color:0xfbbf24,emissive:0x78350f,emissiveIntensity:1.4,metalness:.25,roughness:.3}),
- glass:new THREE.MeshPhysicalMaterial({color:0x173047,transparent:true,opacity:.62,roughness:.15,metalness:.15}),
- white:new THREE.MeshStandardMaterial({color:0xdbeafe,emissive:0x172554,emissiveIntensity:.4})
-};
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),mats.floor);
-floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;world.add(floor);
-const grid=new THREE.GridHelper(180,90,0x1e293b,0x101827);grid.position.y=.01;world.add(grid);
+        <!-- End Celebration Screen -->
+        <div id="end-screen" class="absolute inset-0 bg-black/80 backdrop-blur-lg flex flex-col items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity duration-1000 z-50">
+            <h1 class="romantic-font text-5xl md:text-7xl text-pink-400 mb-4 text-center drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]">We Found Them All!</h1>
+            <p class="text-gray-200 text-lg md:text-xl font-medium text-center max-w-md mb-8 leading-relaxed">
+                Just like chiseling stone to find beauty, every moment with you reveals something wonderful. Here is to all our memories! ❤️
+            </p>
+            <div id="final-gallery" class="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto mb-8 p-2">
+                <!-- Large thumbnails here -->
+            </div>
+        </div>
+    </div>
 
-const objects=[];
-function box(name,pos,size,mat,desc,tags=[]){
- const m=new THREE.Mesh(new THREE.BoxGeometry(...size),mat);m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;m.userData={name,desc,tags};world.add(m);objects.push(m);return m;
-}
-function cyl(name,pos,r,h,mat,desc,tags=[]){
- const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,32),mat);m.position.set(...pos);m.castShadow=true;m.userData={name,desc,tags};world.add(m);objects.push(m);return m;
-}
-function label(text,pos){
- const c=document.createElement("canvas");c.width=512;c.height=96;const x=c.getContext("2d");
- x.font="bold 30px system-ui";x.fillStyle="#dbeafe";x.fillText(text,18,58);
- const tex=new THREE.CanvasTexture(c);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
- sp.position.set(...pos);sp.scale.set(5,0.94,1);world.add(sp);
-}
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js"
+            }
+        }
+    </script>
 
-function ring(pos,rad,mat){
- const r=new THREE.Mesh(new THREE.TorusGeometry(rad,.035,10,80),mat);r.rotation.x=Math.PI/2;r.position.set(...pos);world.add(r);return r;
-}
+    <script type="module">
+        import * as THREE from 'three';
 
-// MULTI-AGENT COMMAND CENTER
-box("Multi-Agent Command Center",[0,2,-8],[8,4,5],mats.dark,
-"CTO → PM → requirements → worker agents. A visual metaphor for your multi-agent software architecture.",["Agents","Go","Postgres","RAG","Docker/K8s"]);
-for(let i=0;i<5;i++){
- const a=i/5*Math.PI*2, x=Math.cos(a)*3.2,z=-8+Math.sin(a)*1.7;
- const n=cyl("Agent Node",[x,2.3,z],.55,1.2,[mats.cyan,mats.violet,mats.green,mats.amber,mats.white][i],
- "A worker node in the multi-agent architecture.",["Agent"]);
- ring([x,1.72,z],.72,[mats.cyan,mats.violet,mats.green,mats.amber,mats.white][i]);
-}
-label("MULTI-AGENT SYSTEMS",[0,4.7,-8]);
+        // Links provided by user
+        const photoUrls = [
+            "https://i.ibb.co/v6NPbw0B/PXL-20260730-193340084-RAW-01-COVER.jpg",
+            "https://i.ibb.co/cS9RhXr1/PXL-20260820-000818394-RAW-02-ORIGINAL.jpg",
+            "https://i.ibb.co/VpPdJX4p/PXL-20260909-230738630-RAW-02-ORIGINAL.jpg",
+            "https://i.ibb.co/0yDccHrq/PXL-20260910-041752707-RAW-01-COVER.jpg",
+            "https://i.ibb.co/bMzDbsj2/PXL-20260915-233244711-RAW-02-ORIGINAL.jpg",
+            "https://i.ibb.co/S49pbqRy/PXL-20260915-233853949-RAW-02-ORIGINAL.jpg"
+        ];
+        
+        const totalPhotos = photoUrls.length;
+        let collectedCount = 0;
 
-// WALL INTELLIGENCE
-box("Wall Intelligence Lab",[-12,2,-2],[6,4,5],mats.dark,
-"Your wall-painting workflow: upload walls, manager-only ML trigger, paintable-wall detection and PENDING / APPROVED / REJECTED flow.",["Next.js","Firebase","ML","Workflow"]);
-for(let i=0;i<3;i++){
- const screen=box("Wall Scan",[ -13.8+i*1.8,2.2,-4.6],[1.35,1.8,.15],[mats.cyan,mats.green,mats.amber][i],
- "A simulated computer-vision inspection screen.",["Computer Vision"]);
-}
-label("WALL INTELLIGENCE",[-12,4.7,-2]);
+        // ThreeJS variables
+        let scene, camera, renderer;
+        let clock = new THREE.Clock();
+        
+        // Game Entities
+        const stones = []; // the 6 objects
+        let rockParticles = [];
+        let confettiParticles = [];
+        const worldBounds = 25;
+        let activeTarget = null; // What the camera is currently looking at
 
-// CODE GRAPH
-box("Code Graph Observatory",[12,2,-2],[7,4,5],mats.dark,
-"A navigable code-intelligence concept: source files become a graph of symbols, dependencies and relationships.",["Code Graph","AST","RAG","LlamaIndex"]);
-const nodes=[];
-for(let i=0;i<12;i++){
- const a=i/12*Math.PI*2, p=new THREE.Vector3(12+Math.cos(a)*(2.1+.5*Math.sin(i)),2+Math.sin(i*1.7)*1.3,-2+Math.sin(a)*(1.4+.3*Math.cos(i)));
- const n=new THREE.Mesh(new THREE.SphereGeometry(.17,12,12),mats.cyan);n.position.copy(p);world.add(n);nodes.push(n);
-}
-for(let i=0;i<nodes.length;i++){
- const g=new THREE.BufferGeometry().setFromPoints([nodes[i].position,nodes[(i+1)%nodes.length].position]);
- world.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0x38bdf8,transparent:true,opacity:.55})));
-}
-label("CODE GRAPH", [12,4.7,-2]);
+        // Input & Physics
+        const moveState = { forward: false, backward: false, left: false, right: false };
+        let isDragging = false;
+        let previousTouch = { x: 0, y: 0 };
+        const lookSensitivity = 0.006;
+        const moveSpeed = 7.0;
+        let walkTime = 0;
 
-// AI RESEARCH LAB
-box("AI Research Lab",[0,2,8],[9,4,5],mats.dark,
-"A research-engineering space for transformers, experiments, model evaluation, retrieval and the bridge between research and production.",["Transformers","ML","Research","Evaluation"]);
-for(let i=0;i<4;i++){
- const c=cyl("Model Core",[-3+i*2,2.4,8],.6,2.0,[mats.violet,mats.cyan,mats.green,mats.amber][i],"A model experiment core.",["AI"]);
- const r=ring([-3+i*2,3.45,8],.9,[mats.violet,mats.cyan,mats.green,mats.amber][i]);
-}
-label("AI RESEARCH LAB",[0,4.7,8]);
+        // UI Refs
+        const container = document.getElementById('webgl-container');
+        const scoreText = document.getElementById('score-text');
+        const inventorySlots = document.getElementById('inventory-slots');
+        const crosshair = document.getElementById('crosshair');
+        const btnChisel = document.getElementById('btn-chisel');
+        const btnCollect = document.getElementById('btn-collect');
+        const compassArrow = document.getElementById('compass-arrow');
+        let ambientLight, dirLight;
 
-// SYSTEMS WORKSHOP
-box("Systems Workshop",[12,2,9],[6,4,5],mats.dark,
-"Your lower-level interests: Rust, infrastructure, compute, hardware-aware AI and the desire to understand systems from first principles.",["Rust","Systems","Hardware","Infrastructure"]);
-for(let i=0;i<5;i++){
- box("Compute Block",[10+i*.9,1.3,7.2],[.55,1.1,.55],i%2?mats.white:mats.cyan,"A compute unit.",["Compute"]);
-}
-label("SYSTEMS WORKSHOP",[12,4.7,9]);
+        // Textures
+        const loadedTextures = [];
 
-// CENTRAL MEMORY MONUMENT
-cyl("First Principles Core",[0,1.5,0],2.3,3,mats.violet,
-"FIRST PRINCIPLES — the principle behind the way you want to learn: understand the mechanism, then build.",["First Principles","Learning"]);
-ring([0,3.1,0],2.65,mats.cyan);
-label("FIRST PRINCIPLES",[0,4.6,0]);
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#ffe4e6'); // Beautiful soft pink environment
+            scene.fog = new THREE.FogExp2('#ffe4e6', 0.035);
 
-// path lights
-for(let x=-30;x<=30;x+=3){
- const p=cyl("Path Marker",[x,.08,15],.05,.15,mats.cyan,"A navigation marker.",[]);
- p.material= new THREE.MeshBasicMaterial({color:0x38bdf8});
-}
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.7, 0); // Eye height
+            camera.rotation.order = 'YXZ';
 
-// collisions: simple building rectangles
-const colliders=[
- {x:0,z:-8,w:8,d:5},{x:-12,z:-2,w:6,d:5},{x:12,z:-2,w:7,d:5},
- {x:0,z:8,w:9,d:5},{x:12,z:9,w:6,d:5}
-];
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            // Critical for proper image rendering (prevents washed-out textures)
+            renderer.outputColorSpace = THREE.SRGBColorSpace; 
+            container.appendChild(renderer.domElement);
 
-const keys={};
-let yaw=0,pitch=0,started=false,locked=false;
-const vel=new THREE.Vector3();
-const clock=new THREE.Clock();
-const ray=new THREE.Raycaster();
-const info=document.getElementById("info"), title=document.getElementById("infoTitle"), text=document.getElementById("infoText"), tags=document.getElementById("infoTags");
-const status=document.getElementById("status");
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
 
-function showInfo(o){
- title.textContent=o.name;text.textContent=o.desc;
- tags.innerHTML=o.tags.map(t=>`<span class="tag">${t}</span>`).join("");
- info.style.display="block";
- status.textContent="Selected · press E near an object to inspect";
-}
-function nearObject(){
- let best=null,dist=Infinity;
- for(const o of objects){const d=o.position.distanceTo(camera.position);if(d<4.8&&d<dist){best=o;dist=d}}
- return best;
-}
-document.getElementById("startBtn").onclick=()=>{
- document.getElementById("start").style.display="none";started=true;renderer.domElement.requestPointerLock();
-};
-renderer.domElement.addEventListener("click",()=>{if(started&&!locked)renderer.domElement.requestPointerLock()});
-document.addEventListener("pointerlockchange",()=>locked=document.pointerLockElement===renderer.domElement);
-document.addEventListener("mousemove",e=>{
- if(!locked)return;
- yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;pitch=Math.max(-1.35,Math.min(1.35,pitch));
-});
-document.addEventListener("keydown",e=>{keys[e.code]=true;if(e.code==="KeyE"){const o=nearObject();if(o)showInfo(o)}});
-document.addEventListener("keyup",e=>keys[e.code]=false);
+            dirLight = new THREE.DirectionalLight(0xff69b4, 0.8); // Hot pink directional sunlight
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.left = -30; dirLight.shadow.camera.right = 30;
+            dirLight.shadow.camera.top = 30; dirLight.shadow.camera.bottom = -30;
+            scene.add(dirLight);
 
-function blocked(pos){
- const r=.65;
- return colliders.some(c=>Math.abs(pos.x-c.x)<c.w/2+r && Math.abs(pos.z-c.z)<c.d/2+r);
-}
-function animate(){
- requestAnimationFrame(animate);
- const dt=Math.min(clock.getDelta(),.05);
- if(started){
-   const dir=new THREE.Vector3();
-   if(keys.KeyW)dir.z-=1;if(keys.KeyS)dir.z+=1;if(keys.KeyA)dir.x-=1;if(keys.KeyD)dir.x+=1;
-   if(dir.lengthSq())dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
-   const speed=keys.ShiftLeft||keys.ShiftRight?8:4.5;
-   const next=camera.position.clone().addScaledVector(dir,speed*dt);
-   if(!blocked(next))camera.position.copy(next);
-   camera.position.y=2;
-   camera.rotation.set(pitch,yaw,0,"YXZ");
-   const o=nearObject();
-   if(o)status.textContent=`Nearby · ${o.name} · press E`; else status.textContent="Explore · find the glowing structures";
- }
- renderer.render(scene,camera);
-}
-animate();
-addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-</script>
+            // Pre-load textures using hidden HTML image elements to fix rendering issues
+            photoUrls.forEach((url, i) => {
+                loadedTextures[i] = new THREE.Texture();
+                loadedTextures[i].colorSpace = THREE.SRGBColorSpace;
+
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                
+                img.onload = () => {
+                    loadedTextures[i].image = img;
+                    loadedTextures[i].needsUpdate = true;
+                };
+                
+                // Fallback to a proxy if the direct URL still throws a CORS error
+                img.onerror = () => {
+                    console.warn("Direct load failed, trying proxy for:", url);
+                    const proxyImg = new Image();
+                    proxyImg.crossOrigin = 'Anonymous';
+                    proxyImg.onload = () => {
+                        loadedTextures[i].image = proxyImg;
+                        loadedTextures[i].needsUpdate = true;
+                    };
+                    proxyImg.src = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+                };
+                
+                img.src = url;
+            });
+
+            createEnvironment();
+            createStones();
+            setupInput();
+            setupUI();
+
+            window.addEventListener('resize', onWindowResize);
+            renderer.setAnimationLoop(animate);
+        }
+
+        function createEnvironment() {
+            // Grid floor
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fbcfe8'; // soft pink ground
+            ctx.fillRect(0,0, 512, 512);
+            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2; // darker pink grid lines
+            for(let i=0; i<512; i+=64) {
+                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+            }
+            const floorTex = new THREE.CanvasTexture(canvas);
+            floorTex.wrapS = THREE.RepeatWrapping; floorTex.wrapT = THREE.RepeatWrapping;
+            floorTex.repeat.set(15, 15);
+
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8, metalness: 0.1 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldBounds*2, worldBounds*2), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Pillars
+            const geo = new THREE.BoxGeometry(1, 10, 1);
+            const mat = new THREE.MeshStandardMaterial({ color: '#fb7185', roughness: 0.7, metalness: 0.1 }); // Rose tint
+            for(let i=0; i<15; i++) {
+                const pillar = new THREE.Mesh(geo, mat);
+                let x = (Math.random() - 0.5) * 40;
+                let z = (Math.random() - 0.5) * 40;
+                if(Math.abs(x) < 3 && Math.abs(z) < 3) x += 4;
+                pillar.position.set(x, 5, z);
+                pillar.castShadow = true; pillar.receiveShadow = true;
+                scene.add(pillar);
+            }
+        }
+
+        function createStones() {
+            // Complex 12-sided geometry instead of a box
+            const stoneGeo = new THREE.DodecahedronGeometry(1.3);
+            const stoneMat = new THREE.MeshStandardMaterial({ 
+                color: 0x9ca3af, 
+                roughness: 1.0, 
+                flatShading: true 
+            });
+
+            // Perfectly flat plane ensuring no image distortion (3:4 aspect ratio)
+            const photoPlaneGeo = new THREE.PlaneGeometry(1.5, 2.0); 
+
+            for (let i = 0; i < totalPhotos; i++) {
+                const group = new THREE.Group();
+                
+                // 1. The Breakable Stone
+                const stoneMesh = new THREE.Mesh(stoneGeo, stoneMat);
+                stoneMesh.position.y = 0.75; // Sit on ground
+                stoneMesh.castShadow = true;
+                group.add(stoneMesh);
+
+                // 2. The Hidden Photo (initially invisible)
+                const photoMat = new THREE.MeshBasicMaterial({
+                    map: loadedTextures[i] || null,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0,
+                    visible: false
+                });
+                const photoMesh = new THREE.Mesh(photoPlaneGeo, photoMat);
+                photoMesh.position.y = 1.2;
+                group.add(photoMesh);
+
+                // Placement
+                const angle = (i / totalPhotos) * Math.PI * 2;
+                const radius = 8 + Math.random() * 8;
+                group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+                
+                // Add bounding box for interactions
+                const hitBox = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 2), new THREE.MeshBasicMaterial({visible:false}));
+                hitBox.position.y = 1.5;
+                group.add(hitBox);
+
+                const stoneData = {
+                    group: group,
+                    stoneMesh: stoneMesh,
+                    photoMesh: photoMesh,
+                    hitBox: hitBox,
+                    health: 4,
+                    state: 'INTACT', // INTACT -> REVEALED -> COLLECTED
+                    index: i,
+                    photoUrl: photoUrls[i]
+                };
+
+                hitBox.userData = { stoneData: stoneData }; // Link back for raycaster
+
+                scene.add(group);
+                stones.push(stoneData);
+            }
+        }
+
+        function setupUI() {
+            for(let i=0; i<totalPhotos; i++) {
+                const slot = document.createElement('div');
+                slot.className = "w-8 h-8 md:w-10 md:h-10 rounded bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center";
+                slot.id = `inv-slot-${i}`;
+                inventorySlots.appendChild(slot);
+            }
+        }
+
+        function setupInput() {
+            const dom = renderer.domElement;
+            
+            // Look controls
+            dom.addEventListener('touchstart', e => { isDragging = true; previousTouch.x = e.touches[0].clientX; previousTouch.y = e.touches[0].clientY; }, {passive:false});
+            dom.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if(!isDragging) return;
+                const touch = e.touches[0];
+                camera.rotation.y -= (touch.clientX - previousTouch.x) * lookSensitivity;
+                camera.rotation.x -= (touch.clientY - previousTouch.y) * lookSensitivity;
+                camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+                previousTouch.x = touch.clientX; previousTouch.y = touch.clientY;
+            }, {passive:false});
+            dom.addEventListener('touchend', () => isDragging = false);
+
+            // Desktop fallbacks
+            let mDown = false;
+            dom.addEventListener('mousedown', e => { mDown=true; previousTouch.x=e.clientX; previousTouch.y=e.clientY;});
+            dom.addEventListener('mousemove', e => {
+                if(!mDown) return;
+                camera.rotation.y -= (e.clientX - previousTouch.x) * lookSensitivity;
+                camera.rotation.x -= (e.clientY - previousTouch.y) * lookSensitivity;
+                camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+                previousTouch.x = e.clientX; previousTouch.y = e.clientY;
+            });
+            dom.addEventListener('mouseup', () => mDown = false);
+            dom.addEventListener('mouseleave', () => mDown = false);
+
+            // D-Pad
+            const bindDir = (id, key) => {
+                const b = document.getElementById(id);
+                b.addEventListener('touchstart', e => { e.preventDefault(); moveState[key]=true; }, {passive:false});
+                b.addEventListener('touchend', () => moveState[key]=false);
+                b.addEventListener('mousedown', () => moveState[key]=true);
+                b.addEventListener('mouseup', () => moveState[key]=false);
+                b.addEventListener('mouseleave', () => moveState[key]=false);
+            };
+            bindDir('btn-fwd', 'forward'); bindDir('btn-back', 'backward');
+            bindDir('btn-left', 'left'); bindDir('btn-right', 'right');
+
+            // Action Buttons
+            btnChisel.addEventListener('touchstart', e => { e.preventDefault(); attemptAction('chisel'); }, {passive:false});
+            btnChisel.addEventListener('mousedown', e => { e.preventDefault(); attemptAction('chisel'); });
+            
+            btnCollect.addEventListener('click', () => attemptAction('collect'));
+            btnCollect.addEventListener('touchstart', e => { e.preventDefault(); attemptAction('collect'); }, {passive:false});
+        }
+
+        function attemptAction(actionType) {
+            if (!activeTarget) return; // No stone currently aimed at
+            const stoneData = activeTarget.userData.stoneData;
+
+            if (actionType === 'chisel' && stoneData.state === 'INTACT') {
+                chiselStone(stoneData);
+            } else if (actionType === 'collect' && stoneData.state === 'REVEALED') {
+                collectPhoto(stoneData);
+            }
+        }
+
+        function chiselStone(stoneData) {
+            stoneData.health--;
+            
+            // Visual feedback
+            spawnRockParticles(stoneData.stoneMesh.getWorldPosition(new THREE.Vector3()));
+            
+            // Shrink the stone block based on health
+            const scale = (stoneData.health / 4) * 0.5 + 0.5; // From 1.0 down to 0.5
+            stoneData.stoneMesh.scale.set(scale, scale, scale);
+            stoneData.stoneMesh.position.y = (1.5 * scale) / 2; // Keep grounded
+
+            // Haptic/UI feedback
+            btnChisel.style.transform = "scale(0.8)";
+            setTimeout(() => btnChisel.style.transform = "scale(1)", 100);
+
+            if (stoneData.health <= 0) {
+                // Stone breaks completely
+                stoneData.state = 'REVEALED';
+                stoneData.stoneMesh.visible = false;
+                
+                // Reveal Photo
+                stoneData.photoMesh.visible = true;
+                stoneData.photoMesh.material.opacity = 1;
+                
+                // Huge rock explosion
+                spawnRockParticles(stoneData.group.position, 40, 6);
+                
+                // Hide chisel, Show Collect
+                btnChisel.style.display = 'none';
+                btnCollect.classList.remove('hidden');
+            }
+        }
+
+        function collectPhoto(stoneData) {
+            stoneData.state = 'COLLECTED';
+            collectedCount++;
+            
+            // Hide 3D photo immediately
+            stoneData.photoMesh.visible = false;
+            stoneData.hitBox.visible = false; // Disable raycasting
+
+            // Update UI Score & Slot
+            scoreText.innerText = `${collectedCount}/6`;
+            const slot = document.getElementById(`inv-slot-${stoneData.index}`);
+            slot.innerHTML = `<img src="${stoneData.photoUrl}" class="w-full h-full object-cover">`;
+
+            // Reset Buttons
+            btnCollect.classList.add('hidden');
+            btnChisel.style.display = 'flex'; // Re-show chisel for the next stones
+            crosshair.className = '';
+
+            if (collectedCount >= totalPhotos) {
+                triggerCelebration();
+            }
+        }
+
+        function spawnRockParticles(pos, count=15, spread=3) {
+            const geo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 1.0 });
+            for(let i=0; i<count; i++) {
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(pos);
+                mesh.position.y += Math.random();
+                const vel = new THREE.Vector3(
+                    (Math.random()-0.5)*spread,
+                    Math.random()*spread + 2,
+                    (Math.random()-0.5)*spread
+                );
+                scene.add(mesh);
+                rockParticles.push({ mesh, vel, life: 1.0 });
+            }
+        }
+
+        function spawnConfetti() {
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff];
+            const geo = new THREE.PlaneGeometry(0.1, 0.2);
+            for(let i=0; i<200; i++) {
+                const mat = new THREE.MeshBasicMaterial({ 
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    side: THREE.DoubleSide
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(camera.position);
+                mesh.position.y += 2;
+                // Explode outwards in a dome
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                const speed = 5 + Math.random() * 10;
+                const vel = new THREE.Vector3(
+                    Math.sin(phi) * Math.cos(theta),
+                    Math.abs(Math.cos(phi)), // Always upwards
+                    Math.sin(phi) * Math.sin(theta)
+                ).multiplyScalar(speed);
+                
+                scene.add(mesh);
+                confettiParticles.push({ mesh, vel, life: 5.0, rot: new THREE.Vector3(Math.random(), Math.random(), Math.random()) });
+            }
+        }
+
+        function triggerCelebration() {
+            // Brighten Scene
+            ambientLight.intensity = 1.0;
+            ambientLight.color.setHex(0xffffff);
+            dirLight.intensity = 1.5;
+            dirLight.color.setHex(0xffffff); // Bright white burst
+            scene.background = new THREE.Color('#fdf2f8'); // Extra bright pink sky
+            scene.fog.color.setHex(0xfdf2f8);
+
+            spawnConfetti();
+
+            // Populate End Screen Gallery
+            const gallery = document.getElementById('final-gallery');
+            photoUrls.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = "w-full aspect-square object-cover rounded-lg border-2 border-pink-400 shadow-md";
+                gallery.appendChild(img);
+            });
+
+            setTimeout(() => {
+                const endScreen = document.getElementById('end-screen');
+                endScreen.classList.remove('opacity-0', 'pointer-events-none');
+                endScreen.classList.add('opacity-100', 'pointer-events-auto');
+                document.getElementById('btn-chisel').style.display = 'none';
+            }, 1500);
+        }
+
+        function animate() {
+            const dt = Math.min(clock.getDelta(), 0.1);
+            
+            // Movement logic
+            let movedX = 0, movedZ = 0;
+            if(moveState.forward) movedZ -= 1;
+            if(moveState.backward) movedZ += 1;
+            if(moveState.left) movedX -= 1;
+            if(moveState.right) movedX += 1;
+
+            if(movedX !== 0 || movedZ !== 0) {
+                const moveVec = new THREE.Vector3(movedX, 0, movedZ).normalize().multiplyScalar(moveSpeed * dt);
+                moveVec.applyEuler(new THREE.Euler(0, camera.rotation.y, 0));
+                camera.position.add(moveVec);
+                
+                // Bounds
+                camera.position.x = Math.max(-worldBounds+1, Math.min(worldBounds-1, camera.position.x));
+                camera.position.z = Math.max(-worldBounds+1, Math.min(worldBounds-1, camera.position.z));
+                
+                walkTime += dt * 10;
+                camera.position.y = 1.7 + Math.sin(walkTime) * 0.05; // Bobbing
+            } else {
+                camera.position.y += (1.7 - camera.position.y) * 10 * dt; // Reset bob
+            }
+
+            // Raycasting for Interaction
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera(new THREE.Vector2(0,0), camera);
+            
+            const hitBoxes = stones.filter(s => s.state !== 'COLLECTED').map(s => s.hitBox);
+            const intersects = ray.intersectObjects(hitBoxes);
+            
+            activeTarget = null;
+            btnChisel.style.opacity = '0.5';
+            crosshair.className = '';
+
+            if (intersects.length > 0 && intersects[0].distance < 4.0) {
+                activeTarget = intersects[0].object;
+                const stData = activeTarget.userData.stoneData;
+                
+                if (stData.state === 'INTACT') {
+                    btnChisel.style.opacity = '1.0';
+                    crosshair.className = 'target-stone';
+                } else if (stData.state === 'REVEALED') {
+                    crosshair.className = 'target-photo';
+                }
+            }
+
+            // Update Game Objects (Rotation & Compass)
+            let nearestDist = Infinity;
+            let nearestTarget = null;
+
+            stones.forEach(stoneData => {
+                // If revealed, slowly rotate the photo
+                if (stoneData.state === 'REVEALED') {
+                    stoneData.group.rotation.y += dt * 1.5;
+                    // Float up and down slightly
+                    stoneData.photoMesh.position.y = 1.2 + Math.sin(clock.elapsedTime * 2 + stoneData.index) * 0.1;
+                }
+
+                // Find nearest uncollected stone for compass
+                if (stoneData.state !== 'COLLECTED') {
+                    const dist = camera.position.distanceTo(stoneData.group.position);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearestTarget = stoneData.group;
+                    }
+                }
+            });
+
+            // Update Compass UI
+            if (nearestTarget && compassArrow) {
+                const dirToObj = new THREE.Vector3().subVectors(nearestTarget.position, camera.position).normalize();
+                const camFwd = new THREE.Vector3();
+                camera.getWorldDirection(camFwd);
+                camFwd.y = 0; camFwd.normalize();
+                dirToObj.y = 0; dirToObj.normalize();
+                
+                const cross = new THREE.Vector3().crossVectors(camFwd, dirToObj);
+                let angle = Math.acos(camFwd.dot(dirToObj));
+                if (cross.y < 0) angle = -angle;
+                compassArrow.style.transform = `rotate(${angle * (180/Math.PI)}deg)`;
+                compassArrow.parentElement.style.display = 'flex';
+            } else {
+                if(compassArrow) compassArrow.parentElement.style.display = 'none';
+            }
+
+            // Particles Animation
+            for(let i=rockParticles.length-1; i>=0; i--) {
+                const p = rockParticles[i];
+                p.vel.y -= 15 * dt; // Gravity
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.mesh.rotation.x += dt * 5;
+                p.life -= dt * 1.5;
+                if(p.life <= 0 || p.mesh.position.y < 0) { scene.remove(p.mesh); rockParticles.splice(i, 1); }
+                else { p.mesh.scale.setScalar(p.life); }
+            }
+
+            for(let i=confettiParticles.length-1; i>=0; i--) {
+                const p = confettiParticles[i];
+                p.vel.y -= 5 * dt; // Lighter gravity
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.mesh.rotation.x += p.rot.x * 10 * dt;
+                p.mesh.rotation.y += p.rot.y * 10 * dt;
+                p.life -= dt * 0.5;
+                if(p.life <= 0 || p.mesh.position.y < 0) { scene.remove(p.mesh); confettiParticles.splice(i, 1); }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
