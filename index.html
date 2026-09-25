@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anniversary Adventure</title>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background-color: #ffccf2; font-family: 'Courier New', Courier, monospace; touch-action: none; }
+        body, html { 
+            margin: 0; padding: 0; overflow: hidden; 
+            background-color: #ffccf2; 
+            font-family: 'Courier New', Courier, monospace; 
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+        }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         
         /* UI Layer */
@@ -15,27 +22,33 @@
         #hud-top { position: absolute; top: 20px; left: 0; width: 100%; text-align: center; color: #d63384; font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 2px white; pointer-events: auto; }
         
         /* Controls */
-        #joystick-area { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; pointer-events: auto; border: 2px solid #ff99cc; }
+        #joystick-area { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: auto; border: 2px solid rgba(214, 51, 132, 0.5); }
         #joystick-knob { position: absolute; top: 40px; left: 40px; width: 40px; height: 40px; background: #d63384; border-radius: 50%; pointer-events: none; }
         
         #look-area { position: absolute; top: 0; right: 0; width: 50vw; height: 100vh; pointer-events: auto; }
         
-        #action-btn { position: absolute; bottom: 40px; right: 40px; width: 80px; height: 80px; background: #d63384; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid white; user-select: none; }
+        #action-btn { position: absolute; bottom: 50px; right: 50px; width: 80px; height: 80px; background: #d63384; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 3px solid white; z-index: 10; }
         #action-btn:active { transform: scale(0.9); }
 
-        #collect-btn { position: absolute; bottom: 140px; right: 20px; padding: 15px 20px; background: #ff4d94; color: white; border-radius: 20px; font-weight: bold; font-size: 1.1rem; pointer-events: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid white; text-align: center; }
+        #collect-btn { position: absolute; bottom: 150px; right: 30px; padding: 15px 25px; background: #ff4d94; color: white; border-radius: 25px; font-weight: bold; font-size: 1.1rem; pointer-events: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid white; text-align: center; z-index: 10; animation: pulse 1.5s infinite; }
         
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         /* Crosshair */
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: rgba(255,255,255,0.8); border: 2px solid #d63384; border-radius: 50%; transform: translate(-50%, -50%); }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: rgba(255,255,255,0.9); border: 2px solid #d63384; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;}
 
         /* Pocket Inventory */
-        #pocket { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: auto; }
-        .pocket-slot { width: 40px; height: 50px; background: rgba(255,255,255,0.5); border: 2px dashed #d63384; border-radius: 5px; background-size: cover; background-position: center; }
+        #pocket { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
+        .pocket-slot { width: 40px; height: 50px; background: rgba(255,255,255,0.6); border: 2px dashed #d63384; border-radius: 5px; background-size: cover; background-position: center; }
 
         /* Celebration Screen */
-        #celebration { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 204, 242, 0.95); z-index: 10; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #d63384; padding: 20px; box-sizing: border-box; }
-        #celebration h1 { font-size: 2.5rem; margin-bottom: 10px; }
-        #celebration p { font-size: 1.2rem; margin-bottom: 20px; }
+        #celebration { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 204, 242, 0.95); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #d63384; padding: 20px; box-sizing: border-box; }
+        #celebration h1 { font-size: 2.8rem; margin-bottom: 10px; text-shadow: 2px 2px 4px white; }
+        #celebration p { font-size: 1.3rem; margin-bottom: 20px; max-width: 80%; line-height: 1.5; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -52,10 +65,14 @@
             <div class="pocket-slot" id="slot-5"></div>
         </div>
         <div id="crosshair"></div>
+        
+        <!-- Touch Areas -->
         <div id="look-area"></div>
         <div id="joystick-area"><div id="joystick-knob"></div></div>
+        
+        <!-- Buttons -->
         <div id="action-btn">CHISEL</div>
-        <div id="collect-btn">⬇️ Collect in Pocket</div>
+        <div id="collect-btn">⬇️ Pocket Image</div>
     </div>
 
     <div id="celebration">
@@ -67,59 +84,66 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. Basic Setup & Pink Theme ---
+        // --- 1. Basic Setup & Theme ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffe6f2); // Soft pink sky
-        scene.fog = new THREE.FogExp2(0xffe6f2, 0.03); // Pink fog
+        scene.background = new THREE.Color(0xffe6f2); 
+        scene.fog = new THREE.FogExp2(0xffe6f2, 0.035); 
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1.6, 0); // Human eye height
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 0); 
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for mobile
         renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(renderer.domElement);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffb3d9, 0.8);
-        dirLight.position.set(5, 10, 5);
+        dirLight.position.set(10, 20, 10);
         scene.add(dirLight);
 
-        // Floor
-        const floorGeo = new THREE.PlaneGeometry(100, 100);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0xffb3d9, roughness: 0.8 });
+        // Floor Plane
+        const floorGeo = new THREE.PlaneGeometry(200, 200);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xff99cc, roughness: 1.0, metalness: 0.1 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
+        // Grid helper for visual depth and movement reference
+        const gridHelper = new THREE.GridHelper(200, 100, 0xffffff, 0xffffff);
+        gridHelper.material.opacity = 0.4;
+        gridHelper.material.transparent = true;
+        gridHelper.position.y = 0.01; 
+        scene.add(gridHelper);
+
         // --- 2. Game Logic & Assets ---
-        // Ensure these exact files are in the same folder as this index.html on GitHub!
         const imageFiles = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg', 'image5.jpg', 'image6.jpg'];
         const textureLoader = new THREE.TextureLoader();
         const nodes = [];
         let score = 0;
         let targetedNode = null;
 
-        // Particle System for Chiseling
+        // Particle System
         const particles = [];
-        const particleGeo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-        const particleMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 1.0 });
+        const particleGeo = new THREE.DodecahedronGeometry(0.15, 0);
+        const particleMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, flatShading: true });
 
         function createParticles(position) {
-            for(let i=0; i<8; i++) {
+            for(let i = 0; i < 12; i++) {
                 const mesh = new THREE.Mesh(particleGeo, particleMat);
                 mesh.position.copy(position);
-                mesh.position.x += (Math.random() - 0.5);
-                mesh.position.y += (Math.random() - 0.5);
-                mesh.position.z += (Math.random() - 0.5);
+                mesh.position.x += (Math.random() - 0.5) * 1.5;
+                mesh.position.y += (Math.random() - 0.5) * 1.5;
+                mesh.position.z += (Math.random() - 0.5) * 1.5;
                 
                 const velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.2,
-                    Math.random() * 0.2,
-                    (Math.random() - 0.5) * 0.2
+                    (Math.random() - 0.5) * 0.3,
+                    Math.random() * 0.3 + 0.1,
+                    (Math.random() - 0.5) * 0.3
                 );
                 
                 scene.add(mesh);
@@ -131,34 +155,35 @@
         imageFiles.forEach((file, index) => {
             const group = new THREE.Group();
             
-            // The texture loads immediately and is applied to the hidden geometry
             const texture = textureLoader.load(file);
             texture.encoding = THREE.sRGBEncoding;
 
-            // The Inner Photo (rendered smaller, inside the rock)
+            // Hidden Inner Photo
             const photoGeo = new THREE.PlaneGeometry(2.5, 3.5);
             const photoMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
             const photoMesh = new THREE.Mesh(photoGeo, photoMat);
-            photoMesh.scale.setScalar(0.5); // Shrink to fit inside
+            photoMesh.scale.setScalar(0.4); // Hidden inside
             group.add(photoMesh);
 
-            // The Outer Rock (Complex Dodecahedron)
-            const rockGeo = new THREE.DodecahedronGeometry(2, 1);
+            // Outer Rock
+            const rockGeo = new THREE.DodecahedronGeometry(1.8, 1);
             const rockMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.9, flatShading: true });
             const rockMesh = new THREE.Mesh(rockGeo, rockMat);
             group.add(rockMesh);
 
-            // Position in a circle around spawn
+            // Circular layout
             const angle = (index / imageFiles.length) * Math.PI * 2;
-            const radius = 12;
-            group.position.set(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
+            const radius = 10;
+            group.position.set(Math.cos(angle) * radius, 1.8, Math.sin(angle) * radius);
             
             group.userData = { 
                 health: 4, 
                 revealed: false,
                 rock: rockMesh, 
                 photo: photoMesh,
-                imgSrc: file
+                imgSrc: file,
+                baseY: 1.8,
+                randomOffset: Math.random() * 100
             };
             
             scene.add(group);
@@ -167,26 +192,30 @@
 
         // --- 3. Interaction Mechanics ---
         const raycaster = new THREE.Raycaster();
-        const centerScreen = new THREE.Vector2(0, 0); // Always casting from center
+        const centerScreen = new THREE.Vector2(0, 0);
         const actionBtn = document.getElementById('action-btn');
         const collectBtn = document.getElementById('collect-btn');
         const scoreSpan = document.getElementById('score');
 
-        actionBtn.addEventListener('pointerdown', () => {
+        // Prevent default touch behaviors on UI
+        document.getElementById('ui-layer').addEventListener('touchstart', (e) => {
+            if (e.target !== lookArea && e.target !== joystickArea && e.target !== actionBtn && e.target !== collectBtn) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        actionBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
             if (targetedNode && !targetedNode.userData.revealed) {
                 const data = targetedNode.userData;
                 data.health -= 1;
                 
-                // Emits debris
                 createParticles(targetedNode.position);
-                
-                // Shrink rock slightly to simulate chiseling
-                data.rock.scale.multiplyScalar(0.85);
+                data.rock.scale.multiplyScalar(0.82);
 
                 if (data.health <= 0) {
-                    // Reveal the photo!
                     data.rock.visible = false;
-                    data.photo.scale.setScalar(1.0); // Grow photo to full size
+                    data.photo.scale.setScalar(1.2); 
                     data.revealed = true;
                     actionBtn.style.display = 'none';
                     collectBtn.style.display = 'block';
@@ -194,12 +223,11 @@
             }
         });
 
-        collectBtn.addEventListener('pointerdown', () => {
+        collectBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
             if (targetedNode && targetedNode.userData.revealed) {
-                // Add to HTML pocket
                 document.getElementById(`slot-${score}`).style.backgroundImage = `url(${targetedNode.userData.imgSrc})`;
                 
-                // Remove from 3D scene
                 scene.remove(targetedNode);
                 nodes.splice(nodes.indexOf(targetedNode), 1);
                 targetedNode = null;
@@ -218,14 +246,14 @@
 
         function triggerCelebration() {
             document.getElementById('celebration').style.display = 'flex';
-            // Make scene bright and beautiful
             scene.background = new THREE.Color(0xffffff);
             scene.fog.color.setHex(0xffffff);
-            ambientLight.intensity = 1.5;
+            ambientLight.intensity = 1.2;
+            dirLight.intensity = 1.2;
         }
 
         // --- 4. Mobile Controls ---
-        let moveJoystick = { active: false, x: 0, y: 0, originX: 0, originY: 0 };
+        let moveJoystick = { active: false, x: 0, y: 0, originX: 0, originY: 0, id: null };
         let lookTouch = { active: false, id: null, lastX: 0, lastY: 0 };
         
         let pitch = 0;
@@ -235,31 +263,42 @@
         const joystickKnob = document.getElementById('joystick-knob');
         const lookArea = document.getElementById('look-area');
 
-        // Joystick Movement
-        joystickArea.addEventListener('pointerdown', (e) => {
+        // Joystick
+        joystickArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
             moveJoystick.active = true;
+            moveJoystick.id = touch.identifier;
+            
             const rect = joystickArea.getBoundingClientRect();
             moveJoystick.originX = rect.left + rect.width / 2;
             moveJoystick.originY = rect.top + rect.height / 2;
-            updateJoystick(e);
-        });
+            updateJoystick(touch);
+        }, { passive: false });
 
-        window.addEventListener('pointermove', (e) => {
-            if (moveJoystick.active) {
-                updateJoystick(e);
+        joystickArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === moveJoystick.id) {
+                    updateJoystick(e.changedTouches[i]);
+                }
+            }
+        }, { passive: false });
+
+        joystickArea.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === moveJoystick.id) {
+                    moveJoystick.active = false;
+                    moveJoystick.x = 0;
+                    moveJoystick.y = 0;
+                    joystickKnob.style.transform = `translate(0px, 0px)`;
+                }
             }
         });
 
-        window.addEventListener('pointerup', () => {
-            moveJoystick.active = false;
-            moveJoystick.x = 0;
-            moveJoystick.y = 0;
-            joystickKnob.style.transform = `translate(0px, 0px)`;
-        });
-
-        function updateJoystick(e) {
-            let dx = e.clientX - moveJoystick.originX;
-            let dy = e.clientY - moveJoystick.originY;
+        function updateJoystick(touch) {
+            let dx = touch.clientX - moveJoystick.originX;
+            let dy = touch.clientY - moveJoystick.originY;
             const maxRadius = 40;
             const distance = Math.sqrt(dx*dx + dy*dy);
             
@@ -275,29 +314,31 @@
 
         // Swipe to Look
         lookArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             if (!lookTouch.active) {
                 lookTouch.active = true;
                 lookTouch.id = e.changedTouches[0].identifier;
-                lookTouch.lastX = e.changedTouches[0].pageX;
-                lookTouch.lastY = e.changedTouches[0].pageY;
+                lookTouch.lastX = e.changedTouches[0].clientX;
+                lookTouch.lastY = e.changedTouches[0].clientY;
             }
-        });
+        }, { passive: false });
 
         lookArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === lookTouch.id) {
-                    const dx = e.changedTouches[i].pageX - lookTouch.lastX;
-                    const dy = e.changedTouches[i].pageY - lookTouch.lastY;
+                    const dx = e.changedTouches[i].clientX - lookTouch.lastX;
+                    const dy = e.changedTouches[i].clientY - lookTouch.lastY;
                     
                     yaw -= dx * 0.005;
                     pitch -= dy * 0.005;
                     pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
                     
-                    lookTouch.lastX = e.changedTouches[i].pageX;
-                    lookTouch.lastY = e.changedTouches[i].pageY;
+                    lookTouch.lastX = e.changedTouches[i].clientX;
+                    lookTouch.lastY = e.changedTouches[i].clientY;
                 }
             }
-        });
+        }, { passive: false });
 
         lookArea.addEventListener('touchend', (e) => {
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -309,18 +350,18 @@
 
         // --- 5. Game Loop ---
         const clock = new THREE.Clock();
-        const moveSpeed = 5;
+        const moveSpeed = 6;
 
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
 
-            // Handle Camera Look
+            // Camera Look
             camera.rotation.set(0, 0, 0);
             camera.rotateY(yaw);
             camera.rotateX(pitch);
 
-            // Handle Camera Move
+            // Camera Move
             if (moveJoystick.active) {
                 const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
                 forward.y = 0; forward.normalize();
@@ -331,37 +372,40 @@
                 camera.position.addScaledVector(right, moveJoystick.x * moveSpeed * delta);
             }
 
-            // Animate Particles
+            // Particles
             for(let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.mesh.position.add(p.velocity);
-                p.velocity.y -= 0.01; // Gravity
-                p.life -= delta * 1.5;
+                p.velocity.y -= 0.015; // Gravity
+                p.life -= delta * 1.2;
                 p.mesh.scale.setScalar(Math.max(0, p.life));
+                
+                // Add some rotation to flying debris
+                p.mesh.rotation.x += 0.1;
+                p.mesh.rotation.y += 0.1;
+
                 if (p.life <= 0) {
                     scene.remove(p.mesh);
                     particles.splice(i, 1);
                 }
             }
 
-            // Raycast to detect nearest rock
+            // Raycast and Node Animation
             raycaster.setFromCamera(centerScreen, camera);
             let closestNode = null;
-            let closestDist = 5; // Interaction range
+            let closestDist = 6; 
 
             nodes.forEach(group => {
-                // Spin revealed photos
-                if (group.userData.revealed) {
-                    group.userData.photo.rotation.y += 1.5 * delta;
+                const data = group.userData;
+                if (data.revealed) {
+                    data.photo.rotation.y += 1.0 * delta;
                 } else {
-                    // Bob floating rocks slightly
-                    group.position.y = 1.5 + Math.sin(Date.now() * 0.002 + group.id) * 0.1;
+                    group.position.y = data.baseY + Math.sin(Date.now() * 0.002 + data.randomOffset) * 0.15;
+                    group.rotation.y += 0.2 * delta;
                 }
 
-                // Check distance for interaction
                 const dist = camera.position.distanceTo(group.position);
                 if (dist < closestDist) {
-                    // Raycast against the group's children to see if we are looking at it
                     const intersects = raycaster.intersectObjects(group.children);
                     if (intersects.length > 0) {
                         closestNode = group;
@@ -370,7 +414,7 @@
                 }
             });
 
-            // Update UI based on targeting
+            // UI State Manager
             if (closestNode !== targetedNode) {
                 if (closestNode) {
                     if (closestNode.userData.revealed) {
@@ -396,9 +440,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Hide action button initially
         actionBtn.style.display = 'none';
-
         animate();
     </script>
 </body>
