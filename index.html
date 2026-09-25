@@ -3,445 +3,754 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anniversary Adventure</title>
+    <title>Chisel Our Memories ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body, html { 
-            margin: 0; padding: 0; overflow: hidden; 
-            background-color: #ffccf2; 
-            font-family: 'Courier New', Courier, monospace; 
-            touch-action: none; 
-            user-select: none;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffe4e6; /* Soft pink background to prevent dark flashing */
+            font-family: 'Inter', sans-serif;
+            touch-action: none; /* Critical for custom mobile controls */
+            -webkit-touch-callout: none;
             -webkit-user-select: none;
+            user-select: none;
         }
-        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        /* UI Layer */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-        
-        /* HUD */
-        #hud-top { position: absolute; top: 20px; left: 0; width: 100%; text-align: center; color: #d63384; font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 2px white; pointer-events: auto; }
-        
-        /* Controls */
-        #joystick-area { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: auto; border: 2px solid rgba(214, 51, 132, 0.5); }
-        #joystick-knob { position: absolute; top: 40px; left: 40px; width: 40px; height: 40px; background: #d63384; border-radius: 50%; pointer-events: none; }
-        
-        #look-area { position: absolute; top: 0; right: 0; width: 50vw; height: 100vh; pointer-events: auto; }
-        
-        #action-btn { position: absolute; bottom: 50px; right: 50px; width: 80px; height: 80px; background: #d63384; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.1rem; pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 3px solid white; z-index: 10; }
-        #action-btn:active { transform: scale(0.9); }
 
-        #collect-btn { position: absolute; bottom: 150px; right: 30px; padding: 15px 25px; background: #ff4d94; color: white; border-radius: 25px; font-weight: bold; font-size: 1.1rem; pointer-events: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid white; text-align: center; z-index: 10; animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .romantic-font { font-family: 'Dancing Script', cursive; }
+
+        #webgl-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .interactive-ui { pointer-events: auto; }
+
+        /* Control Buttons */
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.05s, background 0.1s;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.4);
         }
 
         /* Crosshair */
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: rgba(255,255,255,0.9); border: 2px solid #d63384; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;}
+        #crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 8px; height: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        #crosshair.target-stone { background-color: #fbbf24; transform: translate(-50%, -50%) scale(1.5); }
+        #crosshair.target-photo { background-color: #ec4899; transform: translate(-50%, -50%) scale(1.5); }
 
-        /* Pocket Inventory */
-        #pocket { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; }
-        .pocket-slot { width: 40px; height: 50px; background: rgba(255,255,255,0.6); border: 2px dashed #d63384; border-radius: 5px; background-size: cover; background-position: center; }
-
-        /* Celebration Screen */
-        #celebration { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 204, 242, 0.95); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #d63384; padding: 20px; box-sizing: border-box; }
-        #celebration h1 { font-size: 2.8rem; margin-bottom: 10px; text-shadow: 2px 2px 4px white; }
-        #celebration p { font-size: 1.3rem; margin-bottom: 20px; max-width: 80%; line-height: 1.5; font-weight: bold;}
+        /* Animations */
+        @keyframes pocketDrop {
+            0% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(0.1) translateY(200px); opacity: 0; }
+        }
+        .anim-pocket { animation: pocketDrop 0.6s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+        #game-status { position: absolute; top: 20%; left: 50%; transform: translateX(-50%) translateY(-8px); padding: 10px 16px; border-radius: 999px; color: rgba(255,255,255,.9); background: rgba(25,10,22,.42); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: .78rem; font-weight: 700; letter-spacing: .02em; opacity: .78; transition: opacity .2s, transform .2s, background .2s; pointer-events: none; white-space: nowrap; }
+        #game-status.active { opacity: 1; transform: translateX(-50%) translateY(0); background: rgba(190,24,93,.72); }
+        #game-status.photo-ready { background: rgba(236,72,153,.88); box-shadow: 0 0 24px rgba(236,72,153,.45); }
     </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
-    
+
+    <div id="webgl-container"></div>
+    <div id="crosshair"></div>
+    <div id="game-status">Look around to find a memory stone</div>
+
     <div id="ui-layer">
-        <div id="hud-top">Memories Pocketed: <span id="score">0</span> / 6</div>
-        <div id="pocket">
-            <div class="pocket-slot" id="slot-0"></div>
-            <div class="pocket-slot" id="slot-1"></div>
-            <div class="pocket-slot" id="slot-2"></div>
-            <div class="pocket-slot" id="slot-3"></div>
-            <div class="pocket-slot" id="slot-4"></div>
-            <div class="pocket-slot" id="slot-5"></div>
+        <!-- Top HUD -->
+        <div class="w-full p-4 md:p-6 flex justify-between items-start pt-10">
+            <!-- Compass -->
+            <div class="bg-white/10 backdrop-blur-md p-3 rounded-full border border-white/20 shadow-lg flex items-center justify-center relative w-16 h-16">
+                <div class="absolute text-[10px] text-white/50 top-1">N</div>
+                <div id="compass-arrow" class="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[20px] border-l-transparent border-r-transparent border-b-yellow-400 transition-transform duration-100 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" style="transform-origin: 50% 100%;"></div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10 text-xs md:text-sm text-gray-200 text-center pointer-events-none">
+                Swipe to look <br/> Find the stones!
+            </div>
         </div>
-        <div id="crosshair"></div>
-        
-        <!-- Touch Areas -->
-        <div id="look-area"></div>
-        <div id="joystick-area"><div id="joystick-knob"></div></div>
-        
-        <!-- Buttons -->
-        <div id="action-btn">CHISEL</div>
-        <div id="collect-btn">⬇️ Pocket Image</div>
+
+        <!-- Middle UI: Collect Action -->
+        <div class="flex-grow flex items-center justify-center pointer-events-none">
+            <button id="btn-collect" class="hidden interactive-ui px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-full shadow-[0_10px_25px_rgba(236,72,153,0.5)] border-2 border-white/50 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                <span class="text-lg tracking-wide">Collect in Pocket</span>
+            </button>
+        </div>
+
+        <!-- Bottom Controls & Inventory -->
+        <div class="w-full flex flex-col justify-end pb-6 px-4 gap-4">
+
+            <!-- Controls Row -->
+            <div class="flex justify-between items-end w-full">
+                <!-- D-PAD -->
+                <div class="grid grid-cols-3 gap-2 w-40 md:w-48 interactive-ui">
+                    <div class="col-start-2">
+                        <button id="btn-fwd" class="ctrl-btn w-full aspect-square">↑</button>
+                    </div>
+                    <div class="col-start-1 row-start-2">
+                        <button id="btn-left" class="ctrl-btn w-full aspect-square">←</button>
+                    </div>
+                    <div class="col-start-2 row-start-2">
+                        <button id="btn-back" class="ctrl-btn w-full aspect-square">↓</button>
+                    </div>
+                    <div class="col-start-3 row-start-2">
+                        <button id="btn-right" class="ctrl-btn w-full aspect-square">→</button>
+                    </div>
+                </div>
+
+                <!-- CHISEL BUTTON -->
+                <div class="interactive-ui pb-2">
+                    <button id="btn-chisel" class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-300 to-gray-500 rounded-2xl shadow-[0_6px_0_#4b5563,0_15px_20px_rgba(0,0,0,0.5)] active:shadow-[0_0px_0_#4b5563,0_5px_10px_rgba(0,0,0,0.5)] active:translate-y-1.5 transition-all flex flex-col items-center justify-center border-2 border-white/20 opacity-50 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white mb-1 drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="m10 13-2 2"/>
+                            <path d="m14 17-1.5-1.5"/>
+                            <path d="m16 13-4 4"/>
+                        </svg>
+                        <span class="text-white font-black text-sm tracking-wider drop-shadow-md">CHISEL</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pocket Inventory Bar -->
+            <div class="w-full max-w-md mx-auto bg-black/40 backdrop-blur-md rounded-2xl p-2 border border-white/10 flex items-center justify-between shadow-xl">
+                <div class="text-pink-400 font-bold px-2 text-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="score-text">0/6</span>
+                </div>
+                <div id="inventory-slots" class="flex gap-2">
+                    <!-- Thumbnail slots injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- End Celebration Screen -->
+        <div id="end-screen" class="absolute inset-0 bg-black/80 backdrop-blur-lg flex flex-col items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity duration-1000 z-50">
+            <h1 class="romantic-font text-5xl md:text-7xl text-pink-400 mb-4 text-center drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]">We Found Them All!</h1>
+            <p class="text-gray-200 text-lg md:text-xl font-medium text-center max-w-md mb-8 leading-relaxed">
+                Just like chiseling stone to find beauty, every moment with you reveals something wonderful. Here is to all our memories! ❤️
+            </p>
+            <div id="final-gallery" class="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto mb-8 p-2">
+                <!-- Large thumbnails here -->
+            </div>
+        </div>
     </div>
 
-    <div id="celebration">
-        <h1>Happy Anniversary! 💖</h1>
-        <p>I loved uncovering every single memory with you. You are my world.</p>
-    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js"
+            }
+        }
+    </script>
 
-    <!-- Three.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module">
+        import * as THREE from 'three';
 
-    <script>
-        // --- 1. Basic Setup & Theme ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xffe6f2); 
-        scene.fog = new THREE.FogExp2(0xffe6f2, 0.035); 
+        // Local image paths (ensure these files are in the same folder as index.html on GitHub)
+        const photoUrls = [
+            "image1.jpg",
+            "image2.jpg",
+            "image3.jpg",
+            "image4.jpg",
+            "image5.jpg",
+            "image6.jpg"
+        ];
 
-        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1.6, 0); 
+        const totalPhotos = photoUrls.length;
+        let collectedCount = 0;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for mobile
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        container.appendChild(renderer.domElement);
+        // ThreeJS variables
+        let scene, camera, renderer;
+        let clock = new THREE.Clock();
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffb3d9, 0.8);
-        dirLight.position.set(10, 20, 10);
-        scene.add(dirLight);
+        // Game Entities
+        const stones = []; // the 6 objects
+        let rockParticles = [];
+        let confettiParticles = [];
+        const worldBounds = 25;
+        let activeTarget = null; // What the camera is currently looking at
+        let revealedTarget = null;
 
-        // Floor Plane
-        const floorGeo = new THREE.PlaneGeometry(200, 200);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0xff99cc, roughness: 1.0, metalness: 0.1 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        scene.add(floor);
+        // Input & Physics
+        const moveState = { forward: false, backward: false, left: false, right: false };
+        let isDragging = false;
+        let previousTouch = { x: 0, y: 0 };
+        const lookSensitivity = 0.006;
+        const moveSpeed = 7.0;
+        let walkTime = 0;
 
-        // Grid helper for visual depth and movement reference
-        const gridHelper = new THREE.GridHelper(200, 100, 0xffffff, 0xffffff);
-        gridHelper.material.opacity = 0.4;
-        gridHelper.material.transparent = true;
-        gridHelper.position.y = 0.01; 
-        scene.add(gridHelper);
+        // UI Refs
+        const container = document.getElementById('webgl-container');
+        const scoreText = document.getElementById('score-text');
+        const inventorySlots = document.getElementById('inventory-slots');
+        const crosshair = document.getElementById('crosshair');
+        const btnChisel = document.getElementById('btn-chisel');
+        const btnCollect = document.getElementById('btn-collect');
+        const gameStatus = document.getElementById('game-status');
+        const compassArrow = document.getElementById('compass-arrow');
+        let ambientLight, dirLight;
 
-        // --- 2. Game Logic & Assets ---
-        const imageFiles = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg', 'image5.jpg', 'image6.jpg'];
-        const textureLoader = new THREE.TextureLoader();
-        const nodes = [];
-        let score = 0;
-        let targetedNode = null;
+        // Textures
+        const loadedTextures = [];
 
-        // Particle System
-        const particles = [];
-        const particleGeo = new THREE.DodecahedronGeometry(0.15, 0);
-        const particleMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, flatShading: true });
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#ffe4e6'); // Beautiful soft pink environment
+            scene.fog = new THREE.FogExp2('#ffe4e6', 0.035);
 
-        function createParticles(position) {
-            for(let i = 0; i < 12; i++) {
-                const mesh = new THREE.Mesh(particleGeo, particleMat);
-                mesh.position.copy(position);
-                mesh.position.x += (Math.random() - 0.5) * 1.5;
-                mesh.position.y += (Math.random() - 0.5) * 1.5;
-                mesh.position.z += (Math.random() - 0.5) * 1.5;
-                
-                const velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.3,
-                    Math.random() * 0.3 + 0.1,
-                    (Math.random() - 0.5) * 0.3
-                );
-                
-                scene.add(mesh);
-                particles.push({ mesh, velocity, life: 1.0 });
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.7, 0); // Eye height
+            camera.rotation.order = 'YXZ';
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            // Critical for proper image rendering (prevents washed-out textures)
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            container.appendChild(renderer.domElement);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            dirLight = new THREE.DirectionalLight(0xff69b4, 0.8); // Hot pink directional sunlight
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.left = -30; dirLight.shadow.camera.right = 30;
+            dirLight.shadow.camera.top = 30; dirLight.shadow.camera.bottom = -30;
+            dirLight.shadow.mapSize.set(2048, 2048);
+            dirLight.shadow.bias = -0.0002;
+            dirLight.shadow.normalBias = 0.04;
+            scene.add(dirLight);
+
+            const textureLoader = new THREE.TextureLoader();
+            photoUrls.forEach((url, i) => {
+                loadedTextures[i] = textureLoader.load(url, undefined, undefined, (err) => {
+                    console.error("Failed to load local image:", url, "Make sure the file exists in the correct folder!");
+                });
+                loadedTextures[i].colorSpace = THREE.SRGBColorSpace;
+            });
+
+            createEnvironment();
+            createStones();
+            setupInput();
+            setupUI();
+
+            window.addEventListener('resize', onWindowResize);
+            renderer.setAnimationLoop(animate);
+        }
+
+        function createEnvironment() {
+            // Grid floor
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fbcfe8'; // soft pink ground
+            ctx.fillRect(0,0, 512, 512);
+            ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2; // darker pink grid lines
+            for(let i=0; i<512; i+=64) {
+                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+            }
+            const floorTex = new THREE.CanvasTexture(canvas);
+            floorTex.wrapS = THREE.RepeatWrapping; floorTex.wrapT = THREE.RepeatWrapping;
+            floorTex.repeat.set(15, 15);
+
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8, metalness: 0.1 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldBounds*2, worldBounds*2), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Pillars
+            const geo = new THREE.BoxGeometry(1, 10, 1);
+            const mat = new THREE.MeshStandardMaterial({ color: '#fb7185', roughness: 0.7, metalness: 0.1 }); // Rose tint
+            for(let i=0; i<15; i++) {
+                const pillar = new THREE.Mesh(geo, mat);
+                let x = (Math.random() - 0.5) * 40;
+                let z = (Math.random() - 0.5) * 40;
+                if(Math.abs(x) < 3 && Math.abs(z) < 3) x += 4;
+                pillar.position.set(x, 5, z);
+                pillar.castShadow = true; pillar.receiveShadow = true;
+                scene.add(pillar);
             }
         }
 
-        // Generate Memory Nodes
-        imageFiles.forEach((file, index) => {
-            const group = new THREE.Group();
-            
-            const texture = textureLoader.load(file);
-            texture.encoding = THREE.sRGBEncoding;
+        function createStones() {
+            // Complex 12-sided geometry instead of a box
+            const stoneGeo = new THREE.DodecahedronGeometry(1.3);
+            const stoneMat = new THREE.MeshStandardMaterial({
+                color: 0x9ca3af,
+                roughness: 1.0,
+                flatShading: true
+            });
 
-            // Hidden Inner Photo
-            const photoGeo = new THREE.PlaneGeometry(2.5, 3.5);
-            const photoMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-            const photoMesh = new THREE.Mesh(photoGeo, photoMat);
-            photoMesh.scale.setScalar(0.4); // Hidden inside
-            group.add(photoMesh);
+            // Perfectly flat plane ensuring no image distortion (3:4 aspect ratio)
+            const photoPlaneGeo = new THREE.PlaneGeometry(1, 1);
 
-            // Outer Rock
-            const rockGeo = new THREE.DodecahedronGeometry(1.8, 1);
-            const rockMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.9, flatShading: true });
-            const rockMesh = new THREE.Mesh(rockGeo, rockMat);
-            group.add(rockMesh);
+            for (let i = 0; i < totalPhotos; i++) {
+                const group = new THREE.Group();
 
-            // Circular layout
-            const angle = (index / imageFiles.length) * Math.PI * 2;
-            const radius = 10;
-            group.position.set(Math.cos(angle) * radius, 1.8, Math.sin(angle) * radius);
-            
-            group.userData = { 
-                health: 4, 
-                revealed: false,
-                rock: rockMesh, 
-                photo: photoMesh,
-                imgSrc: file,
-                baseY: 1.8,
-                randomOffset: Math.random() * 100
-            };
-            
-            scene.add(group);
-            nodes.push(group);
-        });
+                // 1. The Breakable Stone
+                const stoneMesh = new THREE.Mesh(stoneGeo, stoneMat);
+                stoneMesh.position.y = 0.75; // Sit on ground
+                stoneMesh.castShadow = true;
+                stoneMesh.receiveShadow = true;
+                group.add(stoneMesh);
 
-        // --- 3. Interaction Mechanics ---
-        const raycaster = new THREE.Raycaster();
-        const centerScreen = new THREE.Vector2(0, 0);
-        const actionBtn = document.getElementById('action-btn');
-        const collectBtn = document.getElementById('collect-btn');
-        const scoreSpan = document.getElementById('score');
+                // 2. The Hidden Photo (initially invisible)
+                const photoMat = new THREE.MeshBasicMaterial({
+                    map: loadedTextures[i] || null,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0,
+                    visible: true
+                });
+                const photoMesh = new THREE.Mesh(photoPlaneGeo, photoMat);
+                photoMesh.renderOrder = 10;
+                photoMat.depthTest = false;
+                photoMat.depthWrite = false;
+                photoMesh.position.y = 1.2;
+                photoMesh.position.z = 0.08;
+                photoMesh.scale.set(1.4, 1.8, 1);
+                const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.08), new THREE.MeshStandardMaterial({ color: 0xf9a8d4, roughness: 0.6 }));
+                frameMesh.position.z = -0.06;
+                frameMesh.scale.set(1.08, 1.08, 1);
+                frameMesh.visible = false;
+                frameMesh.castShadow = true;
+                frameMesh.receiveShadow = true;
+                group.add(photoMesh);
+                group.add(frameMesh);
 
-        // Prevent default touch behaviors on UI
-        document.getElementById('ui-layer').addEventListener('touchstart', (e) => {
-            if (e.target !== lookArea && e.target !== joystickArea && e.target !== actionBtn && e.target !== collectBtn) {
+                // Placement
+                const angle = (i / totalPhotos) * Math.PI * 2;
+                const radius = 8 + Math.random() * 8;
+                group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+
+                // Add bounding box for interactions
+                const hitBox = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 2), new THREE.MeshBasicMaterial({visible:false}));
+                hitBox.position.y = 1.5;
+                group.add(hitBox);
+
+                const stoneData = {
+                    group: group,
+                    stoneMesh: stoneMesh,
+                    photoMesh: photoMesh,
+                    frameMesh: frameMesh,
+                    photoFitted: false,
+                    hitBox: hitBox,
+                    health: 4,
+                    state: 'INTACT', // INTACT -> REVEALED -> COLLECTED
+                    index: i,
+                    photoUrl: photoUrls[i]
+                };
+
+                hitBox.userData = { stoneData: stoneData }; // Link back for raycaster
+
+                scene.add(group);
+                stones.push(stoneData);
+            }
+        }
+
+        function setupUI() {
+            for(let i=0; i<totalPhotos; i++) {
+                const slot = document.createElement('div');
+                slot.className = "w-8 h-8 md:w-10 md:h-10 rounded bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center";
+                slot.id = `inv-slot-${i}`;
+                inventorySlots.appendChild(slot);
+            }
+        }
+
+        function setupInput() {
+            const dom = renderer.domElement;
+
+            // Look controls
+            dom.addEventListener('touchstart', e => { isDragging = true; previousTouch.x = e.touches[0].clientX; previousTouch.y = e.touches[0].clientY; }, {passive:false});
+            dom.addEventListener('touchmove', e => {
                 e.preventDefault();
+                if(!isDragging) return;
+                const touch = e.touches[0];
+                camera.rotation.y -= (touch.clientX - previousTouch.x) * lookSensitivity;
+                camera.rotation.x -= (touch.clientY - previousTouch.y) * lookSensitivity;
+                camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+                previousTouch.x = touch.clientX; previousTouch.y = touch.clientY;
+            }, {passive:false});
+            dom.addEventListener('touchend', () => isDragging = false);
+
+            // Desktop fallbacks
+            let mDown = false;
+            dom.addEventListener('mousedown', e => { mDown=true; previousTouch.x=e.clientX; previousTouch.y=e.clientY;});
+            dom.addEventListener('mousemove', e => {
+                if(!mDown) return;
+                camera.rotation.y -= (e.clientX - previousTouch.x) * lookSensitivity;
+                camera.rotation.x -= (e.clientY - previousTouch.y) * lookSensitivity;
+                camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+                previousTouch.x = e.clientX; previousTouch.y = e.clientY;
+            });
+            dom.addEventListener('mouseup', () => mDown = false);
+            dom.addEventListener('mouseleave', () => mDown = false);
+
+            // D-Pad
+            const bindDir = (id, key) => {
+                const b = document.getElementById(id);
+                b.addEventListener('touchstart', e => { e.preventDefault(); moveState[key]=true; }, {passive:false});
+                b.addEventListener('touchend', () => moveState[key]=false);
+                b.addEventListener('mousedown', () => moveState[key]=true);
+                b.addEventListener('mouseup', () => moveState[key]=false);
+                b.addEventListener('mouseleave', () => moveState[key]=false);
+            };
+            bindDir('btn-fwd', 'forward'); bindDir('btn-back', 'backward');
+            bindDir('btn-left', 'left'); bindDir('btn-right', 'right');
+
+            // Action Buttons
+            btnChisel.addEventListener('touchstart', e => { e.preventDefault(); attemptAction('chisel'); }, {passive:false});
+            btnChisel.addEventListener('mousedown', e => { e.preventDefault(); attemptAction('chisel'); });
+
+            btnCollect.addEventListener('click', () => attemptAction('collect'));
+            btnCollect.addEventListener('touchstart', e => { e.preventDefault(); attemptAction('collect'); }, {passive:false});
+        }
+
+        function attemptAction(actionType) {
+            const target = actionType === 'collect' ? revealedTarget : activeTarget;
+            if (!target) return;
+            const stoneData = target.userData && target.userData.stoneData ? target.userData.stoneData : target;
+
+            if (actionType === 'chisel' && stoneData.state === 'INTACT') {
+                chiselStone(stoneData);
+            } else if (actionType === 'collect' && stoneData.state === 'REVEALED') {
+                collectPhoto(stoneData);
             }
-        }, { passive: false });
+        }
 
-        actionBtn.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-            if (targetedNode && !targetedNode.userData.revealed) {
-                const data = targetedNode.userData;
-                data.health -= 1;
-                
-                createParticles(targetedNode.position);
-                data.rock.scale.multiplyScalar(0.82);
+        function chiselStone(stoneData) {
+            stoneData.health--;
 
-                if (data.health <= 0) {
-                    data.rock.visible = false;
-                    data.photo.scale.setScalar(1.2); 
-                    data.revealed = true;
-                    actionBtn.style.display = 'none';
-                    collectBtn.style.display = 'block';
-                }
+            // Visual feedback
+            spawnRockParticles(stoneData.stoneMesh.getWorldPosition(new THREE.Vector3()));
+
+            // Shrink the stone block based on health
+            const scale = (stoneData.health / 4) * 0.5 + 0.5; // From 1.0 down to 0.5
+            stoneData.stoneMesh.scale.set(scale, scale, scale);
+            stoneData.stoneMesh.position.y = (1.5 * scale) / 2; // Keep grounded
+
+            // Haptic/UI feedback
+            btnChisel.style.transform = "scale(0.8)";
+            setTimeout(() => btnChisel.style.transform = "scale(1)", 100);
+
+            if (stoneData.health <= 0) {
+                // Stone breaks completely
+                stoneData.state = 'REVEALED';
+                stoneData.stoneMesh.visible = false;
+
+                // Reveal Photo
+                stoneData.photoMesh.visible = true;
+
+                stoneData.photoMesh.material.opacity = 1;
+                stoneData.photoMesh.material.needsUpdate = true;
+                stoneData.frameMesh.visible = true;
+
+                // Huge rock explosion
+                spawnRockParticles(stoneData.group.position, 40, 6);
+
+                // Hide chisel, Show Collect
+                btnChisel.style.display = 'none';
+                revealedTarget = stoneData;
+                btnCollect.classList.remove('hidden');
+                btnCollect.style.display = 'flex';
             }
-        });
+        }
 
-        collectBtn.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-            if (targetedNode && targetedNode.userData.revealed) {
-                document.getElementById(`slot-${score}`).style.backgroundImage = `url(${targetedNode.userData.imgSrc})`;
-                
-                scene.remove(targetedNode);
-                nodes.splice(nodes.indexOf(targetedNode), 1);
-                targetedNode = null;
-                
-                score++;
-                scoreSpan.innerText = score;
-                
-                collectBtn.style.display = 'none';
-                actionBtn.style.display = 'flex';
+        function collectPhoto(stoneData) {
+            stoneData.state = 'COLLECTED';
+            revealedTarget = null;
+            collectedCount++;
 
-                if (score >= 6) {
-                    triggerCelebration();
-                }
+            // Hide 3D photo immediately
+            stoneData.photoMesh.visible = false;
+
+            stoneData.frameMesh.visible = false;
+            stoneData.hitBox.visible = false; // Disable raycasting
+
+            // Update UI Score & Slot
+            scoreText.innerText = `${collectedCount}/6`;
+            const slot = document.getElementById(`inv-slot-${stoneData.index}`);
+            slot.innerHTML = `<img src="${stoneData.photoUrl}" class="w-full h-full object-cover">`;
+
+            // Reset Buttons
+            btnCollect.classList.add('hidden');
+            btnCollect.style.display = 'none';
+            btnChisel.style.display = 'flex'; // Re-show chisel for the next stones
+            crosshair.className = '';
+
+            if (collectedCount >= totalPhotos) {
+                triggerCelebration();
             }
-        });
+        }
+
+        function spawnRockParticles(pos, count=15, spread=3) {
+            const geo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 1.0 });
+            for(let i=0; i<count; i++) {
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(pos);
+                mesh.position.y += Math.random();
+                const vel = new THREE.Vector3(
+                    (Math.random()-0.5)*spread,
+                    Math.random()*spread + 2,
+                    (Math.random()-0.5)*spread
+                );
+                scene.add(mesh);
+                rockParticles.push({ mesh, vel, life: 1.0 });
+            }
+        }
+
+        function spawnConfetti() {
+            const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff];
+            const geo = new THREE.PlaneGeometry(0.1, 0.2);
+            for(let i=0; i<200; i++) {
+                const mat = new THREE.MeshBasicMaterial({
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    side: THREE.DoubleSide
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(camera.position);
+                mesh.position.y += 2;
+                // Explode outwards in a dome
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                const speed = 5 + Math.random() * 10;
+                const vel = new THREE.Vector3(
+                    Math.sin(phi) * Math.cos(theta),
+                    Math.abs(Math.cos(phi)), // Always upwards
+                    Math.sin(phi) * Math.sin(theta)
+                ).multiplyScalar(speed);
+
+                scene.add(mesh);
+                confettiParticles.push({ mesh, vel, life: 5.0, rot: new THREE.Vector3(Math.random(), Math.random(), Math.random()) });
+            }
+        }
 
         function triggerCelebration() {
-            document.getElementById('celebration').style.display = 'flex';
-            scene.background = new THREE.Color(0xffffff);
-            scene.fog.color.setHex(0xffffff);
-            ambientLight.intensity = 1.2;
-            dirLight.intensity = 1.2;
+            // Brighten Scene
+            ambientLight.intensity = 1.0;
+            ambientLight.color.setHex(0xffffff);
+            dirLight.intensity = 1.5;
+            dirLight.color.setHex(0xffffff); // Bright white burst
+            scene.background = new THREE.Color('#fdf2f8'); // Extra bright pink sky
+            scene.fog.color.setHex(0xfdf2f8);
+
+            spawnConfetti();
+
+            // Populate End Screen Gallery
+            const gallery = document.getElementById('final-gallery');
+            photoUrls.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = "w-full aspect-square object-cover rounded-lg border-2 border-pink-400 shadow-md";
+                gallery.appendChild(img);
+            });
+
+            setTimeout(() => {
+                const endScreen = document.getElementById('end-screen');
+                endScreen.classList.remove('opacity-0', 'pointer-events-none');
+                endScreen.classList.add('opacity-100', 'pointer-events-auto');
+                document.getElementById('btn-chisel').style.display = 'none';
+            }, 1500);
         }
-
-        // --- 4. Mobile Controls ---
-        let moveJoystick = { active: false, x: 0, y: 0, originX: 0, originY: 0, id: null };
-        let lookTouch = { active: false, id: null, lastX: 0, lastY: 0 };
-        
-        let pitch = 0;
-        let yaw = 0;
-
-        const joystickArea = document.getElementById('joystick-area');
-        const joystickKnob = document.getElementById('joystick-knob');
-        const lookArea = document.getElementById('look-area');
-
-        // Joystick
-        joystickArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.changedTouches[0];
-            moveJoystick.active = true;
-            moveJoystick.id = touch.identifier;
-            
-            const rect = joystickArea.getBoundingClientRect();
-            moveJoystick.originX = rect.left + rect.width / 2;
-            moveJoystick.originY = rect.top + rect.height / 2;
-            updateJoystick(touch);
-        }, { passive: false });
-
-        joystickArea.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === moveJoystick.id) {
-                    updateJoystick(e.changedTouches[i]);
-                }
-            }
-        }, { passive: false });
-
-        joystickArea.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === moveJoystick.id) {
-                    moveJoystick.active = false;
-                    moveJoystick.x = 0;
-                    moveJoystick.y = 0;
-                    joystickKnob.style.transform = `translate(0px, 0px)`;
-                }
-            }
-        });
-
-        function updateJoystick(touch) {
-            let dx = touch.clientX - moveJoystick.originX;
-            let dy = touch.clientY - moveJoystick.originY;
-            const maxRadius = 40;
-            const distance = Math.sqrt(dx*dx + dy*dy);
-            
-            if (distance > maxRadius) {
-                dx = (dx / distance) * maxRadius;
-                dy = (dy / distance) * maxRadius;
-            }
-            
-            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
-            moveJoystick.x = dx / maxRadius;
-            moveJoystick.y = dy / maxRadius;
-        }
-
-        // Swipe to Look
-        lookArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (!lookTouch.active) {
-                lookTouch.active = true;
-                lookTouch.id = e.changedTouches[0].identifier;
-                lookTouch.lastX = e.changedTouches[0].clientX;
-                lookTouch.lastY = e.changedTouches[0].clientY;
-            }
-        }, { passive: false });
-
-        lookArea.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === lookTouch.id) {
-                    const dx = e.changedTouches[i].clientX - lookTouch.lastX;
-                    const dy = e.changedTouches[i].clientY - lookTouch.lastY;
-                    
-                    yaw -= dx * 0.005;
-                    pitch -= dy * 0.005;
-                    pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
-                    
-                    lookTouch.lastX = e.changedTouches[i].clientX;
-                    lookTouch.lastY = e.changedTouches[i].clientY;
-                }
-            }
-        }, { passive: false });
-
-        lookArea.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === lookTouch.id) {
-                    lookTouch.active = false;
-                }
-            }
-        });
-
-        // --- 5. Game Loop ---
-        const clock = new THREE.Clock();
-        const moveSpeed = 6;
 
         function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
+            const dt = Math.min(clock.getDelta(), 0.1);
 
-            // Camera Look
-            camera.rotation.set(0, 0, 0);
-            camera.rotateY(yaw);
-            camera.rotateX(pitch);
+            // Movement logic
+            let movedX = 0, movedZ = 0;
+            if(moveState.forward) movedZ -= 1;
+            if(moveState.backward) movedZ += 1;
+            if(moveState.left) movedX -= 1;
+            if(moveState.right) movedX += 1;
 
-            // Camera Move
-            if (moveJoystick.active) {
-                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                forward.y = 0; forward.normalize();
-                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-                right.y = 0; right.normalize();
+            if(movedX !== 0 || movedZ !== 0) {
+                const moveVec = new THREE.Vector3(movedX, 0, movedZ).normalize().multiplyScalar(moveSpeed * dt);
+                moveVec.applyEuler(new THREE.Euler(0, camera.rotation.y, 0));
+                camera.position.add(moveVec);
 
-                camera.position.addScaledVector(forward, -moveJoystick.y * moveSpeed * delta);
-                camera.position.addScaledVector(right, moveJoystick.x * moveSpeed * delta);
+                // Bounds
+                camera.position.x = Math.max(-worldBounds+1, Math.min(worldBounds-1, camera.position.x));
+                camera.position.z = Math.max(-worldBounds+1, Math.min(worldBounds-1, camera.position.z));
+
+                walkTime += dt * 10;
+                camera.position.y = 1.7 + Math.sin(walkTime) * 0.05; // Bobbing
+            } else {
+                camera.position.y += (1.7 - camera.position.y) * 10 * dt; // Reset bob
             }
 
-            // Particles
-            for(let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.mesh.position.add(p.velocity);
-                p.velocity.y -= 0.015; // Gravity
-                p.life -= delta * 1.2;
-                p.mesh.scale.setScalar(Math.max(0, p.life));
-                
-                // Add some rotation to flying debris
-                p.mesh.rotation.x += 0.1;
-                p.mesh.rotation.y += 0.1;
+            // Raycasting for Interaction
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera(new THREE.Vector2(0,0), camera);
 
-                if (p.life <= 0) {
-                    scene.remove(p.mesh);
-                    particles.splice(i, 1);
+            const hitBoxes = stones.filter(s => s.state !== 'COLLECTED').map(s => s.hitBox);
+            const intersects = ray.intersectObjects(hitBoxes);
+
+            activeTarget = null;
+            btnChisel.style.opacity = '0.5';
+            crosshair.className = '';
+
+            if (intersects.length > 0 && intersects[0].distance < 4.0) {
+                activeTarget = intersects[0].object;
+                const stData = activeTarget.userData.stoneData;
+
+                if (stData.state === 'INTACT') {
+                    btnChisel.style.opacity = '1.0';
+                    crosshair.className = 'target-stone';
+                } else if (stData.state === 'REVEALED') {
+                    crosshair.className = 'target-photo';
                 }
             }
 
-            // Raycast and Node Animation
-            raycaster.setFromCamera(centerScreen, camera);
-            let closestNode = null;
-            let closestDist = 6; 
-
-            nodes.forEach(group => {
-                const data = group.userData;
-                if (data.revealed) {
-                    data.photo.rotation.y += 1.0 * delta;
+            if (gameStatus) {
+                if (activeTarget) {
+                    const targetState = activeTarget.userData.stoneData;
+                    gameStatus.textContent = targetState.state === 'INTACT' ? 'Memory stone • ' + targetState.health + '/4 hits remaining' : 'Memory uncovered • collect it';
+                    gameStatus.className = targetState.state === 'REVEALED' ? 'photo-ready active' : 'active';
                 } else {
-                    group.position.y = data.baseY + Math.sin(Date.now() * 0.002 + data.randomOffset) * 0.15;
-                    group.rotation.y += 0.2 * delta;
+                    gameStatus.textContent = 'Look around to find a memory stone';
+                    gameStatus.className = '';
+                }
+            }
+
+            // Update Game Objects (Rotation & Compass)
+            let nearestDist = Infinity;
+            let nearestTarget = null;
+
+            stones.forEach(stoneData => {
+                // If revealed, present the photo as a readable floating memory card
+                if (stoneData.state === 'REVEALED') {
+                    const texture = stoneData.photoMesh.material.map;
+                    if (texture && texture.image && texture.image.width && !stoneData.photoFitted) {
+                        const maxHeight = 1.8;
+                        const aspect = texture.image.width / texture.image.height;
+                        let height = maxHeight;
+                        let width = height * aspect;
+                        if (width > 2.4) { width = 2.4; height = width / aspect; }
+                        stoneData.photoMesh.scale.set(width, height, 1);
+                        stoneData.frameMesh.scale.set(width * 1.08, height * 1.08, 1);
+                        stoneData.photoFitted = true;
+                    }
+
+                    stoneData.frameMesh.lookAt(camera.position);
+                    stoneData.photoMesh.lookAt(camera.position);
+                    stoneData.photoMesh.rotateZ(Math.sin(clock.elapsedTime * 1.4 + stoneData.index) * 0.035);
+                    // Float up and down slightly
+                    stoneData.photoMesh.position.y = 1.2 + Math.sin(clock.elapsedTime * 2 + stoneData.index) * 0.1;
                 }
 
-                const dist = camera.position.distanceTo(group.position);
-                if (dist < closestDist) {
-                    const intersects = raycaster.intersectObjects(group.children);
-                    if (intersects.length > 0) {
-                        closestNode = group;
-                        closestDist = dist;
+                // Find nearest uncollected stone for compass
+                if (stoneData.state !== 'COLLECTED') {
+                    const dist = camera.position.distanceTo(stoneData.group.position);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearestTarget = stoneData.group;
                     }
                 }
             });
 
-            // UI State Manager
-            if (closestNode !== targetedNode) {
-                if (closestNode) {
-                    if (closestNode.userData.revealed) {
-                        actionBtn.style.display = 'none';
-                        collectBtn.style.display = 'block';
-                    } else {
-                        actionBtn.style.display = 'flex';
-                        collectBtn.style.display = 'none';
-                    }
-                } else {
-                    actionBtn.style.display = 'none';
-                    collectBtn.style.display = 'none';
-                }
-                targetedNode = closestNode;
+            // Update Compass UI
+            if (nearestTarget && compassArrow) {
+                const dirToObj = new THREE.Vector3().subVectors(nearestTarget.position, camera.position).normalize();
+                const camFwd = new THREE.Vector3();
+                camera.getWorldDirection(camFwd);
+                camFwd.y = 0; camFwd.normalize();
+                dirToObj.y = 0; dirToObj.normalize();
+
+                const cross = new THREE.Vector3().crossVectors(camFwd, dirToObj);
+                let angle = Math.acos(camFwd.dot(dirToObj));
+                if (cross.y < 0) angle = -angle;
+                compassArrow.style.transform = `rotate(${angle * (180/Math.PI)}deg)`;
+                compassArrow.parentElement.style.display = 'flex';
+            } else {
+                if(compassArrow) compassArrow.parentElement.style.display = 'none';
+            }
+
+            // Particles Animation
+            for(let i=rockParticles.length-1; i>=0; i--) {
+                const p = rockParticles[i];
+                p.vel.y -= 15 * dt; // Gravity
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.mesh.rotation.x += dt * 5;
+                p.life -= dt * 1.5;
+                if(p.life <= 0 || p.mesh.position.y < 0) { scene.remove(p.mesh); rockParticles.splice(i, 1); }
+                else { p.mesh.scale.setScalar(p.life); }
+            }
+
+            for(let i=confettiParticles.length-1; i>=0; i--) {
+                const p = confettiParticles[i];
+                p.vel.y -= 5 * dt; // Lighter gravity
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.mesh.rotation.x += p.rot.x * 10 * dt;
+                p.mesh.rotation.y += p.rot.y * 10 * dt;
+                p.life -= dt * 0.5;
+                if(p.life <= 0 || p.mesh.position.y < 0) { scene.remove(p.mesh); confettiParticles.splice(i, 1); }
             }
 
             renderer.render(scene, camera);
         }
 
-        window.addEventListener('resize', () => {
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        }
 
-        actionBtn.style.display = 'none';
-        animate();
+        window.onload = init;
     </script>
 </body>
 </html>
